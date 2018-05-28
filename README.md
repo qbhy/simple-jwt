@@ -3,7 +3,7 @@
 
 ## 如何安装 ？
 ```bash
-composer require 96qbhy/simple-jwt:dev-master
+composer require 96qbhy/simple-jwt
 ```
 
 ## 如何使用 ？
