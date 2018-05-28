@@ -1,0 +1,15 @@
+{
+    "name": "96qbhy/simple-jwt",
+    "authors": [
+        {
+            "name": "96qbhy",
+            "email": "96qbhy@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Qbhy\\SimpleJwt\\": "src/"
+        }
+    },
+    "require": {}
+}
