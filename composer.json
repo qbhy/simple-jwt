@@ -1,5 +1,6 @@
 {
     "name": "96qbhy/simple-jwt",
+    "description": "简单的 jwt 实现",
     "authors": [
         {
             "name": "96qbhy",
