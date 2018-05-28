@@ -10,8 +10,48 @@ namespace Qbhy\SimpleJwt;
 
 abstract class AbstractEncrypter implements Encrypter
 {
-    public function check(string $signatureString, $signature): bool
+
+    /** @var string */
+    protected $secret;
+
+    public function __construct(string $secret)
+    {
+        $this->secret = $secret;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSecret(): string
+    {
+        return $this->secret;
+    }
+
+    /**
+     * @param string  $signatureString
+     * @param  string $signature
+     *
+     * @return bool
+     */
+    public function check(string $signatureString, string $signature): bool
     {
         return $this->signature($signatureString) === $signature;
     }
+
+    /**
+     * @param        $secret
+     * @param string $defaultEncrypterClass
+     *
+     * @return AbstractEncrypter
+     */
+    public static function formatEncrypter($secret, $defaultEncrypterClass): AbstractEncrypter
+    {
+        if ($secret instanceof AbstractEncrypter) {
+            return $secret;
+        } else {
+            return new $defaultEncrypterClass($secret);
+        }
+    }
+
+
 }

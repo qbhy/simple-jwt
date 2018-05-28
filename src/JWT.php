@@ -13,13 +13,15 @@ use Qbhy\SimpleJwt\Exceptions\SignatureException;
 class JWT
 {
     /** @var array */
-    protected $headers = [];
+    protected $headers = [
+        'alg' => 'jwt',
+    ];
 
     /** @var array */
     protected $payload = [];
 
     /** @var Encoder */
-    protected static $encoder;
+    protected $encoder;
 
     /** @var Encrypter */
     protected $encrypter;
@@ -30,23 +32,15 @@ class JWT
      * @param array            $headers
      * @param array            $payload
      * @param string|Encrypter $secret
+     * @param null|Encoder     $encoder
      */
-    public function __construct(array $headers, array $payload, $secret)
+    public function __construct(array $headers, array $payload, $secret, $encoder = null)
     {
-        $this->setHeaders($headers);
+        $this->setHeaders($this->headers + $headers);
         $this->setPayload($payload);
-        $this::setEncoder(new Base64Encoder());
-        $this->setEncrypter($this::formatEncrypter($secret));
+        $this->setEncoder($encoder ?? new Base64Encoder());
+        $this->setEncrypter(AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class));
 
-    }
-
-    public static function formatEncrypter($secret): Encrypter
-    {
-        if ($secret instanceof Encrypter) {
-            return $secret;
-        } else {
-            return new Md5Encrypter($secret);
-        }
     }
 
     public function token(): string
@@ -61,11 +55,11 @@ class JWT
     }
 
     /**
-     * @param \Qbhy\SimpleJwt\Encrypter $encrypter
+     * @param Encrypter $encrypter
      *
      * @return static
      */
-    public function setEncrypter(\Qbhy\SimpleJwt\Encrypter $encrypter): JWT
+    public function setEncrypter(Encrypter $encrypter): JWT
     {
         $this->encrypter = $encrypter;
 
@@ -75,21 +69,21 @@ class JWT
     /**
      * @return Encoder
      */
-    public static function getEncoder()
+    public function getEncoder()
     {
-        if (null === static::$encoder) {
-            static::$encoder = new Base64Encoder();
-        }
-
-        return static::$encoder;
+        return $this->encoder;
     }
 
     /**
      * @param Encoder $encoder
+     *
+     * @return JWT
      */
-    public static function setEncoder(Encoder $encoder): void
+    public function setEncoder(Encoder $encoder): JWT
     {
-        static::$encoder = $encoder;
+        $this->encoder = $encoder;
+
+        return $this;
     }
 
     public function generateSignatureString(): string
@@ -143,12 +137,13 @@ class JWT
     /**
      * @param string           $token
      * @param string|Encrypter $secret
+     * @param Encoder          $encoder
      *
      * @return static
      * @throws Exceptions\InvalidTokenException
      * @throws Exceptions\SignatureException
      */
-    public static function decryptToken(string $token, $secret)
+    public static function decryptToken(string $token, $secret, Encoder $encoder = null)
     {
         $arr = explode('.', $token);
 
@@ -156,8 +151,8 @@ class JWT
             throw new InvalidTokenException('Invalid token');
         }
 
-        $encrypter = static::formatEncrypter($secret);
-        $encoder   = static::getEncoder();
+        $encrypter = AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class);
+        $encoder   = $encoder ?? new Base64Encoder();
 
         $signatureString = "{$arr[0]}.{$arr[1]}";
 

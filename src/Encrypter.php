@@ -19,9 +19,9 @@ interface Encrypter
 
     /**
      * @param string $signatureString
-     * @param        $signature
+     * @param string $signature
      *
      * @return bool
      */
-    public function check(string $signatureString, $signature): bool;
+    public function check(string $signatureString, string $signature): bool;
 }
