@@ -2,8 +2,11 @@
 
 namespace Qbhy\SimpleJwt;
 
+use Qbhy\SimpleJwt\Encoders\Base64Encoder;
+use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
 use Qbhy\SimpleJwt\Exceptions\InvalidTokenException;
 use Qbhy\SimpleJwt\Exceptions\SignatureException;
+use Qbhy\SimpleJwt\Interfaces\Encoder;
 
 /**
  * User: qbhy
@@ -29,10 +32,10 @@ class JWT
     /**
      * JWT constructor.
      *
-     * @param array            $headers
-     * @param array            $payload
-     * @param string|Encrypter $secret
-     * @param null|Encoder     $encoder
+     * @param array                    $headers
+     * @param array                    $payload
+     * @param string|AbstractEncrypter $secret
+     * @param null|Encoder             $encoder
      */
     public function __construct(array $headers, array $payload, $secret, $encoder = null)
     {
@@ -58,11 +61,11 @@ class JWT
     }
 
     /**
-     * @param Encrypter $encrypter
+     * @param AbstractEncrypter $encrypter
      *
      * @return static
      */
-    public function setEncrypter(Encrypter $encrypter): JWT
+    public function setEncrypter(AbstractEncrypter $encrypter): JWT
     {
         $this->encrypter = $encrypter;
 
@@ -146,15 +149,15 @@ class JWT
     }
 
     /**
-     * @param string           $token
-     * @param string|Encrypter $secret
-     * @param Encoder          $encoder
+     * @param string                             $token
+     * @param string|AbstractEncrypter           $secret
+     * @param \Qbhy\SimpleJwt\Interfaces\Encoder $encoder
      *
      * @return static
      * @throws Exceptions\InvalidTokenException
      * @throws Exceptions\SignatureException
      */
-    public static function decryptToken(string $token, $secret, Encoder $encoder = null)
+    public static function fromToken(string $token, $secret, Encoder $encoder = null)
     {
         $arr = explode('.', $token);
 

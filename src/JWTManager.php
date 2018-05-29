@@ -8,6 +8,12 @@
 namespace Qbhy\SimpleJwt;
 
 
+use Qbhy\SimpleJwt\Encoders\Base64Encoder;
+use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
+use Qbhy\SimpleJwt\Exceptions\TokenExpiredException;
+use Qbhy\SimpleJwt\Exceptions\TokenRefreshExpiredException;
+use Qbhy\SimpleJwt\Interfaces\Encoder;
+
 class JWTManager
 {
 
@@ -15,10 +21,10 @@ class JWTManager
     protected static $instances = [];
 
     /** @var int token 有效期,单位分钟 minutes */
-    protected $ttl = 60;
+    protected $ttl = 60 * 60;
 
     /** @var int token 过期多久后可以被刷新,单位分钟 minutes */
-    protected $refresh_ttl = 120;
+    protected $refresh_ttl = 120 * 60;
 
     /** @var AbstractEncrypter */
     protected $encrypter;
@@ -29,8 +35,8 @@ class JWTManager
     /**
      * JWTManager constructor.
      *
-     * @param Encrypter|string $secret
-     * @param Encoder|null     $encoder
+     * @param AbstractEncrypter|string $secret
+     * @param Encoder|null             $encoder
      */
     public function __construct($secret, $encoder = null)
     {
@@ -55,7 +61,7 @@ class JWTManager
      */
     public function setTtl(int $ttl): JWTManager
     {
-        $this->ttl = $ttl;
+        $this->ttl = $ttl * 60;
 
         return $this;
     }
@@ -75,7 +81,7 @@ class JWTManager
      */
     public function setRefreshTtl(int $refresh_ttl): JWTManager
     {
-        $this->refresh_ttl = $refresh_ttl;
+        $this->refresh_ttl = $refresh_ttl * 60;
 
         return $this;
     }
@@ -89,11 +95,11 @@ class JWTManager
     }
 
     /**
-     * @param Encrypter $encrypter
+     * @param AbstractEncrypter $encrypter
      *
      * @return JWTManager
      */
-    public function setEncrypter(Encrypter $encrypter): JWTManager
+    public function setEncrypter(AbstractEncrypter $encrypter): JWTManager
     {
         $this->encrypter = $encrypter;
 
@@ -121,8 +127,8 @@ class JWTManager
     }
 
     /**
-     * @param string|Encrypter   $secret
-     * @param Base64Encoder|null $encoder
+     * @param string|AbstractEncrypter $secret
+     * @param Base64Encoder|null       $encoder
      *
      * @return JWTManager
      */
@@ -141,7 +147,7 @@ class JWTManager
     {
         $payload = array_merge($this->initPayload(), $payload);
 
-        $jti = hash('sha256', base64_encode(json_encode($payload)) . $this->getEncrypter()->getSecret());
+        $jti = hash('md5', base64_encode(json_encode($payload)) . $this->getEncrypter()->getSecret());
 
         $payload['jti'] = $jti;
 
@@ -157,12 +163,56 @@ class JWTManager
         $payload = [
             'sub' => '1',
             'iss' => 'http://' . ($_SERVER['SERVER_NAME'] ?? '') . ':' . ($_SERVER["SERVER_PORT"] ?? '') . ($_SERVER["REQUEST_URI"] ?? ''),
-            'exp' => $timestamp + ($this->getTtl() * 60),
+            'exp' => $timestamp + $this->getTtl(),
             'iat' => $timestamp,
             'nbf' => $timestamp,
         ];
 
         return $payload;
+    }
+
+    /**
+     * @param string $token
+     *
+     * @return \Qbhy\SimpleJwt\JWT
+     * @throws \Qbhy\SimpleJwt\Exceptions\InvalidTokenException
+     * @throws \Qbhy\SimpleJwt\Exceptions\SignatureException
+     * @throws \Qbhy\SimpleJwt\Exceptions\TokenExpiredException
+     */
+    public function fromToken(string $token): JWT
+    {
+        $jwt = JWT::fromToken($token, $this->getEncrypter(), $this->getEncoder());
+
+        $timestamp = time();
+
+        $payload = $jwt->getPayload();
+
+        if ($payload['exp'] <= $timestamp) {
+            throw (new TokenExpiredException('token expired'))->setJwt($jwt);
+        }
+
+        return $jwt;
+    }
+
+    public function refresh(JWT $jwt, bool $force = false)
+    {
+        $payload = $jwt->getPayload();
+
+        if (!$force) {
+            $refreshExp = $payload['exp'] + $this->getRefreshTtl();
+
+            if ($refreshExp <= time()) {
+                throw new TokenRefreshExpiredException('token expired, refresh is not supported');
+            }
+        }
+
+        unset($payload['exp']);
+        unset($payload['iat']);
+        unset($payload['nbf']);
+
+        $jwt = $this->make($payload, $jwt->getHeaders());
+
+        return $jwt;
     }
 
 }
