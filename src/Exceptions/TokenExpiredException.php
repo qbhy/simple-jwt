@@ -7,22 +7,7 @@
 
 namespace Qbhy\SimpleJwt\Exceptions;
 
-use Qbhy\SimpleJwt\JWT;
-
-class TokenExpiredException extends \Exception
+class TokenExpiredException extends JWTException
 {
-    /** @var JWT */
-    protected $jwt;
 
-    /**
-     * @param JWT $jwt
-     *
-     * @return TokenExpiredException
-     */
-    public function setJwt(JWT $jwt): TokenExpiredException
-    {
-        $this->jwt = $jwt;
-
-        return $this;
-    }
 }

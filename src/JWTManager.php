@@ -11,6 +11,7 @@ namespace Qbhy\SimpleJwt;
 use Qbhy\SimpleJwt\Encoders\Base64Encoder;
 use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
 use Qbhy\SimpleJwt\Exceptions\TokenExpiredException;
+use Qbhy\SimpleJwt\Exceptions\TokenRefreshExpiredException;
 use Qbhy\SimpleJwt\Interfaces\Encoder;
 
 class JWTManager
@@ -23,7 +24,7 @@ class JWTManager
     protected $ttl = 60 * 60;
 
     /** @var int token 过期多久后可以被刷新,单位分钟 minutes */
-    protected $refresh_ttl = 120;
+    protected $refresh_ttl = 120 * 60;
 
     /** @var AbstractEncrypter */
     protected $encrypter;
@@ -80,7 +81,7 @@ class JWTManager
      */
     public function setRefreshTtl(int $refresh_ttl): JWTManager
     {
-        $this->refresh_ttl = $refresh_ttl;
+        $this->refresh_ttl = $refresh_ttl * 60;
 
         return $this;
     }
@@ -189,6 +190,27 @@ class JWTManager
         if ($payload['exp'] <= $timestamp) {
             throw (new TokenExpiredException('token expired'))->setJwt($jwt);
         }
+
+        return $jwt;
+    }
+
+    public function refresh(JWT $jwt, bool $force = false)
+    {
+        $payload = $jwt->getPayload();
+
+        if (!$force) {
+            $refreshExp = $payload['exp'] + $this->getRefreshTtl();
+
+            if ($refreshExp <= time()) {
+                throw new TokenRefreshExpiredException('token expired, refresh is not supported');
+            }
+        }
+
+        unset($payload['exp']);
+        unset($payload['iat']);
+        unset($payload['nbf']);
+
+        $jwt = $this->make($payload, $jwt->getHeaders());
 
         return $jwt;
     }

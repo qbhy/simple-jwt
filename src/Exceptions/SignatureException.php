@@ -7,7 +7,7 @@
 
 namespace Qbhy\SimpleJwt\Exceptions;
 
-class SignatureException extends \Exception
+class SignatureException extends JWTException
 {
 
 }

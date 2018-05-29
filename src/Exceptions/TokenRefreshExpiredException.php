@@ -7,7 +7,8 @@
 
 namespace Qbhy\SimpleJwt\Exceptions;
 
-class InvalidTokenException extends JWTException
+
+class TokenRefreshExpiredException extends JWTException
 {
-    
+
 }
