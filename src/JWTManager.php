@@ -8,6 +8,11 @@
 namespace Qbhy\SimpleJwt;
 
 
+use Qbhy\SimpleJwt\Encoders\Base64Encoder;
+use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
+use Qbhy\SimpleJwt\Exceptions\TokenExpiredException;
+use Qbhy\SimpleJwt\Interfaces\Encoder;
+
 class JWTManager
 {
 
@@ -29,8 +34,8 @@ class JWTManager
     /**
      * JWTManager constructor.
      *
-     * @param Encrypter|string $secret
-     * @param Encoder|null     $encoder
+     * @param AbstractEncrypter|string $secret
+     * @param Encoder|null             $encoder
      */
     public function __construct($secret, $encoder = null)
     {
@@ -89,11 +94,11 @@ class JWTManager
     }
 
     /**
-     * @param Encrypter $encrypter
+     * @param AbstractEncrypter $encrypter
      *
      * @return JWTManager
      */
-    public function setEncrypter(Encrypter $encrypter): JWTManager
+    public function setEncrypter(AbstractEncrypter $encrypter): JWTManager
     {
         $this->encrypter = $encrypter;
 
@@ -121,8 +126,8 @@ class JWTManager
     }
 
     /**
-     * @param string|Encrypter   $secret
-     * @param Base64Encoder|null $encoder
+     * @param string|AbstractEncrypter $secret
+     * @param Base64Encoder|null       $encoder
      *
      * @return JWTManager
      */
@@ -163,6 +168,29 @@ class JWTManager
         ];
 
         return $payload;
+    }
+
+    /**
+     * @param string $token
+     *
+     * @return \Qbhy\SimpleJwt\JWT
+     * @throws \Qbhy\SimpleJwt\Exceptions\InvalidTokenException
+     * @throws \Qbhy\SimpleJwt\Exceptions\SignatureException
+     * @throws \Qbhy\SimpleJwt\Exceptions\TokenExpiredException
+     */
+    public function fromToken(string $token): JWT
+    {
+        $jwt = JWT::fromToken($token, $this->getEncrypter(), $this->getEncoder());
+
+        $timestamp = time();
+
+        $payload = $jwt->getPayload();
+
+        if ($payload['exp'] <= $timestamp) {
+            throw (new TokenExpiredException('token expired'))->setJwt($jwt);
+        }
+
+        return $jwt;
     }
 
 }

@@ -5,8 +5,9 @@
  * Time: 下午1:06
  */
 
-namespace Qbhy\SimpleJwt;
+namespace Qbhy\SimpleJwt\EncryptAdapters;
 
+use Qbhy\SimpleJwt\AbstractEncrypter;
 
 class Md5Encrypter extends AbstractEncrypter
 {

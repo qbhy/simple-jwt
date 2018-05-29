@@ -8,6 +8,8 @@
 namespace Qbhy\SimpleJwt;
 
 
+use Qbhy\SimpleJwt\Interfaces\Encrypter;
+
 abstract class AbstractEncrypter implements Encrypter
 {
 

@@ -5,7 +5,7 @@
  * Time: 下午12:09
  */
 
-namespace Qbhy\SimpleJwt;
+namespace Qbhy\SimpleJwt\Interfaces;
 
 
 interface Encoder

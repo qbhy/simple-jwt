@@ -21,11 +21,11 @@ $payload = [
 $jwt1 = new \Qbhy\SimpleJwt\JWT($headers, $payload, $secret);
 
 // 可以使用自己实现的 encoder 进行编码
-$encoder = new \Qbhy\SimpleJwt\Base64Encoder();
+$encoder = new \Qbhy\SimpleJwt\Encoders\Base64Encoder();
 $jwt1->setEncoder($encoder);
 
 // 可以使用自己实现的 encrypter 进行签名和校验
-$encrypter = new \Qbhy\SimpleJwt\Md5Encrypter($secret);
+$encrypter = new \Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter($secret);
 $jwt1->setEncrypter($encrypter);
 
 // 生成 token
@@ -35,7 +35,7 @@ print_r($token);
 
 
 // 通过 token 得到 jwt 对象
-$decryptedJwt = \Qbhy\SimpleJwt\JWT::decryptToken($token, $encrypter, $encoder);
+$decryptedJwt = \Qbhy\SimpleJwt\JWT::fromToken($token, $encrypter, $encoder);
 
 // 得到 payload
 $decryptedJwt->getPayload();
@@ -43,10 +43,9 @@ $decryptedJwt->getPayload();
 // 得到 headers
 $decryptedJwt->getHeaders();
 
-print_r($decryptedJwt);
 
 $jwtManager = new \Qbhy\SimpleJwt\JWTManager($secret, $encoder);
 
 $jwt2 = $jwtManager->make($payload);
 
-print_r($jwt1::decryptToken($jwt2->token(), $jwt2->getEncrypter()));
+print_r($jwtManager->fromToken($jwt2->token()));

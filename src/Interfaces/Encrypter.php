@@ -5,7 +5,7 @@
  * Time: 下午1:04
  */
 
-namespace Qbhy\SimpleJwt;
+namespace Qbhy\SimpleJwt\Interfaces;
 
 
 interface Encrypter

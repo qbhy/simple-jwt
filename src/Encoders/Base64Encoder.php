@@ -5,8 +5,10 @@
  * Time: 下午12:10
  */
 
-namespace Qbhy\SimpleJwt;
+namespace Qbhy\SimpleJwt\Encoders;
 
+
+use Qbhy\SimpleJwt\Interfaces\Encoder;
 
 class Base64Encoder implements Encoder
 {
