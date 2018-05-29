@@ -202,7 +202,7 @@ class JWTManager
             $refreshExp = $payload['exp'] + $this->getRefreshTtl();
 
             if ($refreshExp <= time()) {
-                throw new TokenRefreshExpiredException('token expired, refresh is not supported');
+                throw (new TokenRefreshExpiredException('token expired, refresh is not supported'))->setJwt($jwt);
             }
         }
 
