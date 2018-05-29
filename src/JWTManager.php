@@ -20,7 +20,7 @@ class JWTManager
     protected static $instances = [];
 
     /** @var int token 有效期,单位分钟 minutes */
-    protected $ttl = 60;
+    protected $ttl = 60 * 60;
 
     /** @var int token 过期多久后可以被刷新,单位分钟 minutes */
     protected $refresh_ttl = 120;
@@ -60,7 +60,7 @@ class JWTManager
      */
     public function setTtl(int $ttl): JWTManager
     {
-        $this->ttl = $ttl;
+        $this->ttl = $ttl * 60;
 
         return $this;
     }
@@ -146,7 +146,7 @@ class JWTManager
     {
         $payload = array_merge($this->initPayload(), $payload);
 
-        $jti = hash('sha256', base64_encode(json_encode($payload)) . $this->getEncrypter()->getSecret());
+        $jti = hash('md5', base64_encode(json_encode($payload)) . $this->getEncrypter()->getSecret());
 
         $payload['jti'] = $jti;
 
@@ -162,7 +162,7 @@ class JWTManager
         $payload = [
             'sub' => '1',
             'iss' => 'http://' . ($_SERVER['SERVER_NAME'] ?? '') . ':' . ($_SERVER["SERVER_PORT"] ?? '') . ($_SERVER["REQUEST_URI"] ?? ''),
-            'exp' => $timestamp + ($this->getTtl() * 60),
+            'exp' => $timestamp + $this->getTtl(),
             'iat' => $timestamp,
             'nbf' => $timestamp,
         ];

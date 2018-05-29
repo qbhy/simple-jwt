@@ -7,45 +7,54 @@
 
 require 'vendor/autoload.php';
 
+use Qbhy\SimpleJwt\JWTManager;
+use Qbhy\SimpleJwt\JWT;
+use Qbhy\SimpleJwt\Encoders;
+use Qbhy\SimpleJwt\EncryptAdapters;
+
 $secret = '96qbhy/simple-jwt';
 
-$headers = [
-    'ver' => 0.1,
-];
+$headers = ['ver' => 0.1,];
 
 $payload = [
     'user_id' => 'qbhy@gmail.com',
     'tester'  => 'qbhy',
 ];
 
-$jwt1 = new \Qbhy\SimpleJwt\JWT($headers, $payload, $secret);
+// 可以使用自己实现的 encrypter 进行签名和校验，请继承自 AbstractEncrypter 抽象类
+$encrypter = new EncryptAdapters\Md5Encrypter($secret);
 
-// 可以使用自己实现的 encoder 进行编码
-$encoder = new \Qbhy\SimpleJwt\Encoders\Base64Encoder();
-$jwt1->setEncoder($encoder);
+// 可以使用自己实现的 encoder 进行编码，请实现 Encoder 接口
+$encoder = new Encoders\Base64Encoder();
 
-// 可以使用自己实现的 encrypter 进行签名和校验
-$encrypter = new \Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter($secret);
-$jwt1->setEncrypter($encrypter);
+// 实例化 jwt manager
+$jwtManager = new JWTManager($secret, $encoder);
 
-// 生成 token
-$token = $jwt1->token();
+// 设置 token 有效时间，单位 分钟
+$jwtManager->setTtl(60);
 
+// 通过 jwt manager 示例化 jwt ，标准 jwt
+$jwt0 = $jwtManager->make($payload, $headers);
+
+// 生成 token，当然你也可以使用链式调用，例如:  $jwtManager->make($payload, $headers)->token()
+$token = $jwt0->token();
 print_r($token);
 
-
 // 通过 token 得到 jwt 对象
-$decryptedJwt = \Qbhy\SimpleJwt\JWT::fromToken($token, $encrypter, $encoder);
+$jwt1 = $jwtManager->fromToken($token);
 
 // 得到 payload
-$decryptedJwt->getPayload();
+$jwt1->getPayload();
 
 // 得到 headers
-$decryptedJwt->getHeaders();
+$jwt1->getHeaders();
 
+print_r($jwt1);
 
-$jwtManager = new \Qbhy\SimpleJwt\JWTManager($secret, $encoder);
+// 自己实例化 jwt ，完全纯净的 jwt
+$jwt2 = new JWT($headers, $payload, $secret);
 
-$jwt2 = $jwtManager->make($payload);
+// 仍然可以自定义 encoder 和 encrypter
+$jwt2->setEncoder($encoder);
+$jwt2->setEncrypter($encrypter);
 
-print_r($jwtManager->fromToken($jwt2->token()));
