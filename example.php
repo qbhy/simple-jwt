@@ -18,18 +18,18 @@ $payload = [
     'tester'  => 'qbhy',
 ];
 
-$jwt = new \Qbhy\SimpleJwt\JWT($headers, $payload, $secret);
+$jwt1 = new \Qbhy\SimpleJwt\JWT($headers, $payload, $secret);
 
 // 可以使用自己实现的 encoder 进行编码
 $encoder = new \Qbhy\SimpleJwt\Base64Encoder();
-$jwt->setEncoder($encoder);
+$jwt1->setEncoder($encoder);
 
 // 可以使用自己实现的 encrypter 进行签名和校验
 $encrypter = new \Qbhy\SimpleJwt\Md5Encrypter($secret);
-$jwt->setEncrypter($encrypter);
+$jwt1->setEncrypter($encrypter);
 
 // 生成 token
-$token = $jwt->token();
+$token = $jwt1->token();
 
 print_r($token);
 
@@ -45,5 +45,8 @@ $decryptedJwt->getHeaders();
 
 print_r($decryptedJwt);
 
-$jwtManager = new \Qbhy\SimpleJwt\JWTManager($secret);
+$jwtManager = new \Qbhy\SimpleJwt\JWTManager($secret, $encoder);
 
+$jwt2 = $jwtManager->make($payload);
+
+print_r($jwt1::decryptToken($jwt2->token(), $jwt2->getEncrypter()));

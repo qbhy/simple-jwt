@@ -24,4 +24,9 @@ interface Encrypter
      * @return bool
      */
     public function check(string $signatureString, string $signature): bool;
+
+    /**
+     * @return string
+     */
+    public function alg(): string;
 }

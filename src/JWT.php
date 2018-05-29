@@ -14,7 +14,7 @@ class JWT
 {
     /** @var array */
     protected $headers = [
-        'alg' => 'jwt',
+        'typ' => 'jwt',
     ];
 
     /** @var array */
@@ -23,7 +23,7 @@ class JWT
     /** @var Encoder */
     protected $encoder;
 
-    /** @var Encrypter */
+    /** @var AbstractEncrypter */
     protected $encrypter;
 
     /**
@@ -36,10 +36,13 @@ class JWT
      */
     public function __construct(array $headers, array $payload, $secret, $encoder = null)
     {
-        $this->setHeaders($this->headers + $headers);
+        $encrypter = AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class);
+        $this->setHeaders(array_merge($this->headers, [
+            'alg' => $encrypter->alg(),
+        ], $headers));
         $this->setPayload($payload);
         $this->setEncoder($encoder ?? new Base64Encoder());
-        $this->setEncrypter(AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class));
+        $this->setEncrypter($encrypter);
 
     }
 
@@ -64,6 +67,14 @@ class JWT
         $this->encrypter = $encrypter;
 
         return $this;
+    }
+
+    /**
+     * @return AbstractEncrypter
+     */
+    public function getEncrypter(): AbstractEncrypter
+    {
+        return $this->encrypter;
     }
 
     /**

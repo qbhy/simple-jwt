@@ -20,7 +20,7 @@ class JWTManager
     /** @var int token 过期多久后可以被刷新,单位分钟 minutes */
     protected $refresh_ttl = 120;
 
-    /** @var Encrypter */
+    /** @var AbstractEncrypter */
     protected $encrypter;
 
     /** @var Encoder */
@@ -81,9 +81,9 @@ class JWTManager
     }
 
     /**
-     * @return Encrypter
+     * @return AbstractEncrypter
      */
-    public function getEncrypter(): Encrypter
+    public function getEncrypter(): AbstractEncrypter
     {
         return $this->encrypter;
     }
@@ -136,4 +136,33 @@ class JWTManager
 
         return static::$instances[$encrypter->getSecret()];
     }
+
+    public function make(array $payload, array $headers = []): JWT
+    {
+        $payload = array_merge($this->initPayload(), $payload);
+
+        $jti = hash('sha256', base64_encode(json_encode($payload)) . $this->getEncrypter()->getSecret());
+
+        $payload['jti'] = $jti;
+
+        $jwt = new JWT($headers, $payload, $this->getEncrypter(), $this->getEncoder());
+
+        return $jwt;
+    }
+
+    public function initPayload(): array
+    {
+        $timestamp = time();
+
+        $payload = [
+            'sub' => '1',
+            'iss' => 'http://' . ($_SERVER['SERVER_NAME'] ?? '') . ':' . ($_SERVER["SERVER_PORT"] ?? '') . ($_SERVER["REQUEST_URI"] ?? ''),
+            'exp' => $timestamp + ($this->getTtl() * 60),
+            'iat' => $timestamp,
+            'nbf' => $timestamp,
+        ];
+
+        return $payload;
+    }
+
 }
