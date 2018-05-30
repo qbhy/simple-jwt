@@ -174,10 +174,10 @@ class JWTManager
     /**
      * @param string $token
      *
-     * @return \Qbhy\SimpleJwt\JWT
-     * @throws \Qbhy\SimpleJwt\Exceptions\InvalidTokenException
-     * @throws \Qbhy\SimpleJwt\Exceptions\SignatureException
-     * @throws \Qbhy\SimpleJwt\Exceptions\TokenExpiredException
+     * @return JWT
+     * @throws Exceptions\InvalidTokenException
+     * @throws Exceptions\SignatureException
+     * @throws Exceptions\TokenExpiredException
      */
     public function fromToken(string $token): JWT
     {

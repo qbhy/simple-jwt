@@ -66,3 +66,5 @@ $jwt2 = new JWT($headers, $payload, $secret);
 $jwt2->setEncoder($encoder);
 $jwt2->setEncrypter($encrypter);
 
+print_r($jwtManager->make(['group_id' => 1, 'invite_user' => 'A'])->token());
+
