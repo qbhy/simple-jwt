@@ -9,16 +9,16 @@ namespace Qbhy\SimpleJwt\EncryptAdapters;
 
 use Qbhy\SimpleJwt\AbstractEncrypter;
 
-class Md5Encrypter extends AbstractEncrypter
+class SHA1Encrypter extends AbstractEncrypter
 {
     public function signature(string $signatureString): string
     {
-        return hash('md5', $signatureString . $this->secret);
+        return hash('sha1', $signatureString . $this->secret);
     }
 
     public function alg(): string
     {
-        return 'md5';
+        return 'sha1';
     }
 
 }
