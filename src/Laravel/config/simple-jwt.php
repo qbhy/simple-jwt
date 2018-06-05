@@ -42,8 +42,11 @@ return [
 
     ],
 
-
-    'encoder' => Encoders\Base64UrlSafeEncoder::class,
+    /**
+     * 编码类
+     */
+    'encoder'     => Encoders\Base64UrlSafeEncoder::class,
+//    'encoder'     => Encoders\Base64Encoder::class,
 
 
 ];
