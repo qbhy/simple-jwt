@@ -16,7 +16,7 @@ class CryptEncrypter extends AbstractEncrypter
         return crypt($signatureString, $this->secret);
     }
 
-    public function alg(): string
+    public static function alg(): string
     {
         return 'php-crypt';
     }

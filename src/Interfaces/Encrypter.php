@@ -28,5 +28,5 @@ interface Encrypter
     /**
      * @return string
      */
-    public function alg(): string;
+    public static function alg(): string;
 }

@@ -16,7 +16,7 @@ class Md5Encrypter extends AbstractEncrypter
         return hash('md5', $signatureString . $this->secret);
     }
 
-    public function alg(): string
+    public static function alg(): string
     {
         return 'md5';
     }

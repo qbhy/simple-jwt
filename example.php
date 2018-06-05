@@ -23,7 +23,7 @@ $payload = [
 ];
 
 // 可以使用自己实现的 encrypter 进行签名和校验，请继承自 AbstractEncrypter 抽象类
-$encrypter = new EncryptAdapters\Md5Encrypter($secret);
+$encrypter = new EncryptAdapters\PasswordHashEncrypter($secret);
 
 // 可以使用自己实现的 encoder 进行编码，请实现 Encoder 接口
 $encoder = new Encoders\Base64Encoder();
@@ -41,7 +41,7 @@ $jwt0 = $jwtManager->make($payload, $headers);
 
 // 生成 token，当然你也可以使用链式调用，例如:  $jwtManager->make($payload, $headers)->token()
 $token = $jwt0->token();
-//print_r($token);
+print_r($token);
 
 try {
 // 通过 token 得到 jwt 对象
@@ -57,7 +57,7 @@ $jwt1->getPayload();
 // 得到 headers
 $jwt1->getHeaders();
 
-//print_r($jwt1);
+print_r($jwt1);
 
 // 自己实例化 jwt ，完全纯净的 jwt ，无多余 payload
 $jwt2 = new JWT($headers, $payload, $secret);
@@ -66,6 +66,4 @@ $jwt2 = new JWT($headers, $payload, $secret);
 $jwt2->setEncoder($encoder);
 $jwt2->setEncrypter($encrypter);
 
-//print_r($jwtManager->make(['group_id' => 1, 'invite_user' => 'A'])->token());
-
-print_r(hash('sha512','aaa'));
+print_r($jwtManager->make(['group_id' => 1, 'invite_user' => 'A'])->token());

@@ -18,5 +18,12 @@
     "license": "Apache-2.0",
     "require-dev": {
         "laravel/framework": "^5.5"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Qbhy\\SimpleJwt\\Laravel\\ServiceProvider"
+            ]
+        }
     }
 }
