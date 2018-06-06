@@ -3,7 +3,9 @@
 namespace Qbhy\SimpleJwt;
 
 use Qbhy\SimpleJwt\Encoders\Base64Encoder;
+use Qbhy\SimpleJwt\EncryptAdapters\CryptEncrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
+use Qbhy\SimpleJwt\EncryptAdapters\SHA1Encrypter;
 use Qbhy\SimpleJwt\Exceptions\InvalidTokenException;
 use Qbhy\SimpleJwt\Exceptions\SignatureException;
 use Qbhy\SimpleJwt\Interfaces\Encoder;
@@ -29,6 +31,9 @@ class JWT
     /** @var AbstractEncrypter */
     protected $encrypter;
 
+    /** @var array */
+    protected static $supportAlgos = [];
+
     /**
      * JWT constructor.
      *
@@ -40,15 +45,32 @@ class JWT
     public function __construct(array $headers, array $payload, $secret, $encoder = null)
     {
         $encrypter = AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class);
-        $this->setHeaders(array_merge($this->headers, [
-            'alg' => $encrypter->alg(),
-        ], $headers));
-        $this->setPayload($payload);
-        $this->setEncoder($encoder ?? new Base64Encoder());
-        $this->setEncrypter($encrypter);
 
+        $this->setHeaders(array_merge($this->headers, ['alg' => $encrypter::alg(),], $headers))
+             ->setPayload($payload)
+             ->setEncoder($encoder ?? new Base64Encoder())
+             ->setEncrypter($encrypter);
     }
 
+    /**
+     * @param array $supportAlgos
+     */
+    public static function setSupportAlgos(array $supportAlgos)
+    {
+        static::$supportAlgos = $supportAlgos;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getSupportAlgos(): array
+    {
+        return self::$supportAlgos;
+    }
+
+    /**
+     * @return string
+     */
     public function token(): string
     {
         $signatureString = $this->generateSignatureString();
@@ -83,7 +105,7 @@ class JWT
     /**
      * @return Encoder
      */
-    public function getEncoder()
+    public function getEncoder(): Encoder
     {
         return $this->encoder;
     }
@@ -148,6 +170,11 @@ class JWT
         return $this;
     }
 
+    public static function encrypterClass(string $alg): string
+    {
+        return static::$supportAlgos[$alg] ?? Md5Encrypter::class;
+    }
+
     /**
      * @param string                             $token
      * @param string|AbstractEncrypter           $secret
@@ -165,7 +192,9 @@ class JWT
             throw new InvalidTokenException('Invalid token');
         }
 
-        $encrypter = AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class);
+        $encrypterClass = static::encrypterClass($arr[0]['alg'] ?? Md5Encrypter::alg());
+
+        $encrypter = AbstractEncrypter::formatEncrypter($secret, $encrypterClass);
         $encoder   = $encoder ?? new Base64Encoder();
 
         $signatureString = "{$arr[0]}.{$arr[1]}";

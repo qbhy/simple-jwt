@@ -23,7 +23,7 @@ $payload = [
 ];
 
 // 可以使用自己实现的 encrypter 进行签名和校验，请继承自 AbstractEncrypter 抽象类
-$encrypter = new EncryptAdapters\Md5Encrypter($secret);
+$encrypter = new EncryptAdapters\PasswordHashEncrypter($secret);
 
 // 可以使用自己实现的 encoder 进行编码，请实现 Encoder 接口
 $encoder = new Encoders\Base64Encoder();
@@ -67,4 +67,3 @@ $jwt2->setEncoder($encoder);
 $jwt2->setEncrypter($encrypter);
 
 print_r($jwtManager->make(['group_id' => 1, 'invite_user' => 'A'])->token());
-
