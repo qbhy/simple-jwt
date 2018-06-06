@@ -23,7 +23,7 @@ class PasswordHashEncrypter extends AbstractEncrypter
 
     public static function alg(): string
     {
-        return 'bcrypt-hash';
+        return 'bcrypt';
     }
 
 }

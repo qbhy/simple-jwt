@@ -5,15 +5,13 @@
  * Time: 下午2:35
  */
 
-use \Qbhy\SimpleJwt\EncryptAdapters;
+use \Qbhy\SimpleJwt\EncryptAdapters as Encrypter;
 use \Qbhy\SimpleJwt\Encoders;
 
 return [
 
     /**
-     * jwt secret
-     *
-     * 服务端身份标识
+     * jwt 服务端身份标识
      */
     'secret'      => env('SIMPLE_JWT_SECRET'),
 
@@ -31,13 +29,13 @@ return [
      * 加密算法支持
      */
     'algo'        => [
-        'default' => env('SIMPLE_JWT_ALGO', EncryptAdapters\PasswordHashEncrypter::alg()),
+        'default' => env('SIMPLE_JWT_ALGO', Encrypter\PasswordHashEncrypter::alg()),
 
         'providers' => [
-            EncryptAdapters\Md5Encrypter::alg()          => EncryptAdapters\Md5Encrypter::class,
-            EncryptAdapters\CryptEncrypter::alg()        => EncryptAdapters\CryptEncrypter::class,
-            EncryptAdapters\PasswordHashEncrypter::alg() => EncryptAdapters\PasswordHashEncrypter::class,
-            EncryptAdapters\SHA1Encrypter::alg()         => EncryptAdapters\SHA1Encrypter::class,
+            Encrypter\Md5Encrypter::alg()          => Encrypter\Md5Encrypter::class,
+            Encrypter\CryptEncrypter::alg()        => Encrypter\CryptEncrypter::class,
+            Encrypter\PasswordHashEncrypter::alg() => Encrypter\PasswordHashEncrypter::class,
+            Encrypter\SHA1Encrypter::alg()         => Encrypter\SHA1Encrypter::class,
         ],
 
     ],
