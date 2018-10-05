@@ -16,7 +16,7 @@ abstract class AbstractEncrypter implements Encrypter
     /** @var string */
     protected $secret;
 
-    public function __construct(string $secret)
+    public function __construct($secret)
     {
         $this->secret = $secret;
     }
