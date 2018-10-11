@@ -15,7 +15,10 @@ use Qbhy\SimpleJwt\Exceptions;
 
 $secret = '96qbhy/simple-jwt';
 
-$headers = ['ver' => 0.1,];
+$headers = [
+    'ver' => 0.1,
+    't'   => 'user',
+];
 
 $payload = [
     'user_id' => 'qbhy@gmail.com',
@@ -39,9 +42,54 @@ $jwtManager->setRefreshTtl(120);
 // 通过 jwt manager 示例化 jwt ，标准 jwt
 $jwt0 = $jwtManager->make($payload, $headers);
 
+class UserToken extends \Qbhy\SimpleJwt\AbstractTokenProvider
+{
+    protected $needPayloads = [
+        'user_id',
+    ];
+
+    protected $matchHeaders = [
+        't' => 'user',
+    ];
+
+    protected $user;
+
+    public function setUser($user)
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    protected function buildPayload(): array
+    {
+        return [
+            'user_id' => $this->user,
+        ];
+    }
+
+    /**
+     * 返回 user 模型
+     */
+    public function user()
+    {
+        return $this->user;
+//        return User::query()->findOrFail($this->getJwt()->getPayload()['user_id']);
+    }
+}
+
+
 // 生成 token，当然你也可以使用链式调用，例如:  $jwtManager->make($payload, $headers)->token()
 $token = $jwt0->token();
 print_r($token);
+
+
+$userTokenProvider = new UserToken($jwtManager);
+
+print_r(PHP_EOL . $userTokenProvider->fromToken($token)->user() . PHP_EOL);
+
+var_dump($userTokenProvider->setUser('new user')->getToken());
+
 
 try {
 // 通过 token 得到 jwt 对象
