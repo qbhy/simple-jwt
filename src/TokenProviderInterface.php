@@ -9,8 +9,10 @@ namespace Qbhy\SimpleJwt;
 
 interface TokenProviderInterface
 {
-    public function fromToken(string $token);
+    public static function fromToken(string $token);
 
     public function getToken($rebuild = true);
+
+    public function buildToken(): string;
 
 }
