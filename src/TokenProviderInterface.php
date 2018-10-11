@@ -11,8 +11,8 @@ interface TokenProviderInterface
 {
     public static function fromToken(string $token);
 
-    public function getToken($rebuild = true);
+    public function getToken();
 
-    public function buildToken(): string;
+    public function buildPayload(): array;
 
 }

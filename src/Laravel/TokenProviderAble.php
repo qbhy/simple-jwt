@@ -71,9 +71,20 @@ trait TokenProviderAble
     }
 
     /**
+     * @return string
+     */
+    public function getToken()
+    {
+        /** @var JWTManager $jwtManager */
+        $jwtManager = app(JWTManager::class);
+
+        return $jwtManager->make($this->buildPayload(), static::$matchHeaders)->token();
+    }
+
+    /**
      * @param array $payload
      *
      * @return \Illuminate\Database\Eloquent\Model|static
      */
-    abstract public static function buildModel(array $payload): Model;
+    abstract public static function buildModel(array $payload);
 }
