@@ -14,22 +14,13 @@ use Qbhy\SimpleJwt\JWTManager;
 
 /**
  * Trait TokenProviderAble
+ *
  * @package Qbhy\SimpleJwt\Laravel
  * @mixin \Qbhy\SimpleJwt\TokenProviderInterface
  * @mixin \Illuminate\Database\Eloquent\Model
  */
 trait TokenProviderAble
 {
-    /**
-     * @var array
-     */
-    protected static $needPayloads = [];
-
-    /**
-     * @var array
-     */
-    protected static $matchHeaders = [];
-
     /**
      * @param string $token
      *
@@ -54,7 +45,7 @@ trait TokenProviderAble
     protected static function checkJwt(JWT $jwt)
     {
         $headers = $jwt->getHeaders();
-        foreach (static::$matchHeaders as $key => $header) {
+        foreach (static::matchHeaders() as $key => $header) {
             if (!isset($headers[$key]) || $headers[$key] !== $header) {
                 throw new TokenProviderException('header invalid');
             }
@@ -62,7 +53,7 @@ trait TokenProviderAble
 
         $payload = $jwt->getPayload();
 
-        $needPayloadsCount = count($needPayloads = static::$needPayloads);
+        $needPayloadsCount = count($needPayloads = static::needPayloads());
         $intersectCount    = count(array_intersect($needPayloads, array_keys($payload)));
 
         if ($needPayloadsCount !== $intersectCount) {
@@ -78,7 +69,7 @@ trait TokenProviderAble
         /** @var JWTManager $jwtManager */
         $jwtManager = app(JWTManager::class);
 
-        return $jwtManager->make($this->buildPayload(), static::$matchHeaders)->token();
+        return $jwtManager->make($this->buildPayload(), static::matchHeaders())->token();
     }
 
     /**
@@ -87,4 +78,8 @@ trait TokenProviderAble
      * @return \Illuminate\Database\Eloquent\Model|static
      */
     abstract public static function fromPayload(array $payload);
+
+    abstract protected static function matchHeaders();
+
+    abstract protected static function needPayloads();
 }
