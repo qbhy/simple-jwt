@@ -43,7 +43,7 @@ trait TokenProviderAble
 
         static::checkJwt($jwt);
 
-        return static::findModel($jwt->getPayload());
+        return static::fromPayload($jwt->getPayload());
     }
 
     /**
@@ -86,5 +86,5 @@ trait TokenProviderAble
      *
      * @return \Illuminate\Database\Eloquent\Model|static
      */
-    abstract public static function findModel(array $payload);
+    abstract public static function fromPayload(array $payload);
 }
