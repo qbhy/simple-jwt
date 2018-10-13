@@ -24,13 +24,16 @@ trait TokenProviderAble
     /**
      * @param string $token
      *
-     * @return static
+     * @return Model|TokenProviderAble
      * @throws TokenProviderException
+     * @throws \Qbhy\SimpleJwt\Exceptions\InvalidTokenException
+     * @throws \Qbhy\SimpleJwt\Exceptions\SignatureException
+     * @throws \Qbhy\SimpleJwt\Exceptions\TokenExpiredException
      */
     public static function fromToken(string $token)
     {
         /** @var JWT $jwt */
-        $jwt = app(JWTManager::class)->fromToken($token);
+        $jwt = static::jwtManager()->fromToken($token);
 
         static::checkJwt($jwt);
 
@@ -66,10 +69,17 @@ trait TokenProviderAble
      */
     public function getToken()
     {
-        /** @var JWTManager $jwtManager */
-        $jwtManager = app(JWTManager::class);
+        $jwtManager = static::jwtManager();
 
         return $jwtManager->make($this->buildPayload(), static::matchHeaders())->token();
+    }
+
+    /**
+     * @return JWTManager
+     */
+    protected static function jwtManager()
+    {
+        return app(JWTManager::class);
     }
 
     /**
