@@ -13,7 +13,7 @@ class SHA1Encrypter extends AbstractEncrypter
 {
     public function signature(string $signatureString): string
     {
-        return hash('sha1', $signatureString . $this->secret);
+        return hash('sha1', $signatureString . $this->getSecret());
     }
 
     public static function alg(): string

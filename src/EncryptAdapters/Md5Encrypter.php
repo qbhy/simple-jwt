@@ -13,7 +13,7 @@ class Md5Encrypter extends AbstractEncrypter
 {
     public function signature(string $signatureString): string
     {
-        return hash('md5', $signatureString . $this->secret);
+        return hash('md5', $signatureString . $this->getSecret());
     }
 
     public static function alg(): string

@@ -13,7 +13,7 @@ class CryptEncrypter extends AbstractEncrypter
 {
     public function signature(string $signatureString): string
     {
-        return crypt($signatureString, $this->secret);
+        return crypt($signatureString, $this->getSecret());
     }
 
     public static function alg(): string
