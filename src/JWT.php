@@ -124,8 +124,8 @@ class JWT
 
     public function generateSignatureString(): string
     {
-        $headersString = $this::getEncoder()->encode(json_encode($this->headers));
-        $payloadString = $this::getEncoder()->encode(json_encode($this->payload));
+        $headersString = $this->getEncoder()->encode(json_encode($this->headers));
+        $payloadString = $this->getEncoder()->encode(json_encode($this->payload));
 
         return "{$headersString}.{$payloadString}";
     }
@@ -191,20 +191,18 @@ class JWT
         if (count($arr) !== 3) {
             throw new InvalidTokenException('Invalid token');
         }
+        $headers = json_decode($encoder->decode($arr[0]), true);
+        $payload = json_decode($encoder->decode($arr[1]), true);
 
         $encrypterClass = static::encrypterClass($arr[0]['alg'] ?? Md5Encrypter::alg());
 
-        $encrypter = AbstractEncrypter::formatEncrypter($secret, $encrypterClass);
+        $encrypter = is_callable($secret) ? call_user_func_array($secret, [$headers, $payload]) : AbstractEncrypter::formatEncrypter($secret, $encrypterClass);
         $encoder   = $encoder ?? new Base64Encoder();
 
         $signatureString = "{$arr[0]}.{$arr[1]}";
 
         if ($encrypter->check($signatureString, $encoder->decode($arr[2]))) {
-            return new static(
-                json_decode($encoder->decode($arr[0]), true),
-                json_decode($encoder->decode($arr[1]), true),
-                $encrypter
-            );
+            return new static($headers, $payload, $encrypter);
         }
 
         throw new SignatureException('invalid signature');
