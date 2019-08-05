@@ -203,7 +203,7 @@ class JWT
         $signatureString = "{$arr[0]}.{$arr[1]}";
 
         if (!is_array($headers) || !is_array($payload)) {
-            throw new JWTException('bad token');
+            throw new InvalidTokenException('Invalid token');
         }
 
         if ($encrypter->check($signatureString, $encoder->decode($arr[2]))) {
