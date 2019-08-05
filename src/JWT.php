@@ -7,6 +7,7 @@ use Qbhy\SimpleJwt\EncryptAdapters\CryptEncrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\SHA1Encrypter;
 use Qbhy\SimpleJwt\Exceptions\InvalidTokenException;
+use Qbhy\SimpleJwt\Exceptions\JWTException;
 use Qbhy\SimpleJwt\Exceptions\SignatureException;
 use Qbhy\SimpleJwt\Interfaces\Encoder;
 
@@ -47,9 +48,9 @@ class JWT
         $encrypter = AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class);
 
         $this->setHeaders(array_merge($this->headers, ['alg' => $encrypter::alg(),], $headers))
-             ->setPayload($payload)
-             ->setEncoder($encoder ?? new Base64Encoder())
-             ->setEncrypter($encrypter);
+            ->setPayload($payload)
+            ->setEncoder($encoder ?? new Base64Encoder())
+            ->setEncrypter($encrypter);
     }
 
     /**
@@ -200,6 +201,10 @@ class JWT
         $encoder   = $encoder ?? new Base64Encoder();
 
         $signatureString = "{$arr[0]}.{$arr[1]}";
+
+        if (!is_array($headers) || !is_array($payload)) {
+            throw new JWTException('bad token');
+        }
 
         if ($encrypter->check($signatureString, $encoder->decode($arr[2]))) {
             return new static($headers, $payload, $encrypter);
