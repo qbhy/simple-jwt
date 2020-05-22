@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
 /**
- * User: qbhy
- * Date: 2018/5/28
- * Time: 下午4:55
+ * This file is part of qbhy/simple-jwt.
+ *
+ * @link     https://github.com/qbhy/simple-jwt
+ * @document https://github.com/qbhy/simple-jwt/blob/master/README.md
+ * @contact  qbhy0715@qq.com
+ * @license  https://github.com/qbhy/simple-jwt/blob/master/LICENSE
  */
 
 namespace Qbhy\SimpleJwt;
-
 
 use Qbhy\SimpleJwt\Encoders\Base64Encoder;
 use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
@@ -16,7 +20,6 @@ use Qbhy\SimpleJwt\Interfaces\Encoder;
 
 class JWTManager
 {
-
     /** @var JWTManager[] */
     protected static $instances = [];
 
@@ -36,29 +39,21 @@ class JWTManager
      * JWTManager constructor.
      *
      * @param AbstractEncrypter|string $secret
-     * @param Encoder|null             $encoder
+     * @param null|Encoder $encoder
      */
     public function __construct($secret, $encoder = null)
     {
         $this->encrypter = AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class);
-        $this->encoder   = $encoder ?? new Base64Encoder();
+        $this->encoder = $encoder ?? new Base64Encoder();
 
         static::$instances[$this->encrypter->getSecret()] = $this;
     }
 
-    /**
-     * @return int
-     */
     public function getTtl(): int
     {
         return $this->ttl;
     }
 
-    /**
-     * @param int $ttl
-     *
-     * @return JWTManager
-     */
     public function setTtl(int $ttl): JWTManager
     {
         $this->ttl = $ttl * 60;
@@ -66,19 +61,11 @@ class JWTManager
         return $this;
     }
 
-    /**
-     * @return int
-     */
     public function getRefreshTtl(): int
     {
         return $this->refresh_ttl;
     }
 
-    /**
-     * @param int $refresh_ttl
-     *
-     * @return JWTManager
-     */
     public function setRefreshTtl(int $refresh_ttl): JWTManager
     {
         $this->refresh_ttl = $refresh_ttl * 60;
@@ -86,19 +73,11 @@ class JWTManager
         return $this;
     }
 
-    /**
-     * @return AbstractEncrypter
-     */
     public function getEncrypter(): AbstractEncrypter
     {
         return $this->encrypter;
     }
 
-    /**
-     * @param AbstractEncrypter $encrypter
-     *
-     * @return JWTManager
-     */
     public function setEncrypter(AbstractEncrypter $encrypter): JWTManager
     {
         $this->encrypter = $encrypter;
@@ -106,19 +85,11 @@ class JWTManager
         return $this;
     }
 
-    /**
-     * @return Encoder
-     */
     public function getEncoder(): Encoder
     {
         return $this->encoder;
     }
 
-    /**
-     * @param Encoder $encoder
-     *
-     * @return JWTManager
-     */
     public function setEncoder(Encoder $encoder): JWTManager
     {
         $this->encoder = $encoder;
@@ -127,16 +98,13 @@ class JWTManager
     }
 
     /**
-     * @param string|AbstractEncrypter $secret
-     * @param Base64Encoder|null       $encoder
-     *
-     * @return JWTManager
+     * @param AbstractEncrypter|string $secret
      */
     public static function getInstance($secret, Base64Encoder $encoder = null): JWTManager
     {
         $encrypter = AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class);
 
-        if (!isset(static::$instances[$encrypter->getSecret()])) {
+        if (! isset(static::$instances[$encrypter->getSecret()])) {
             static::$instances[$encrypter->getSecret()] = new JWTManager($secret, $encoder);
         }
 
@@ -151,9 +119,7 @@ class JWTManager
 
         $payload['jti'] = $jti;
 
-        $jwt = new JWT($headers, $payload, $this->getEncrypter(), $this->getEncoder());
-
-        return $jwt;
+        return new JWT($headers, $payload, $this->getEncrypter(), $this->getEncoder());
     }
 
     public function initPayload(): array
@@ -162,7 +128,7 @@ class JWTManager
 
         $payload = [
             'sub' => '1',
-            'iss' => 'http://' . ($_SERVER['SERVER_NAME'] ?? '') . ':' . ($_SERVER["SERVER_PORT"] ?? '') . ($_SERVER["REQUEST_URI"] ?? ''),
+            'iss' => 'http://' . ($_SERVER['SERVER_NAME'] ?? '') . ':' . ($_SERVER['SERVER_PORT'] ?? '') . ($_SERVER['REQUEST_URI'] ?? ''),
             'exp' => $timestamp + $this->getTtl(),
             'iat' => $timestamp,
             'nbf' => $timestamp,
@@ -172,9 +138,6 @@ class JWTManager
     }
 
     /**
-     * @param string $token
-     *
-     * @return JWT
      * @throws Exceptions\InvalidTokenException
      * @throws Exceptions\SignatureException
      * @throws Exceptions\TokenExpiredException
@@ -198,7 +161,7 @@ class JWTManager
     {
         $payload = $jwt->getPayload();
 
-        if (!$force) {
+        if (! $force) {
             $refreshExp = $payload['exp'] + $this->getRefreshTtl();
 
             if ($refreshExp <= time()) {
@@ -206,13 +169,8 @@ class JWTManager
             }
         }
 
-        unset($payload['exp']);
-        unset($payload['iat']);
-        unset($payload['nbf']);
+        unset($payload['exp'], $payload['iat'], $payload['nbf']);
 
-        $jwt = $this->make($payload, $jwt->getHeaders());
-
-        return $jwt;
+        return $this->make($payload, $jwt->getHeaders());
     }
-
 }

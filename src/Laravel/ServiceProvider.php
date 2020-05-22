@@ -1,15 +1,20 @@
 <?php
+
+declare(strict_types=1);
 /**
- * User: qbhy
- * Date: 2018/5/31
- * Time: 下午2:30
+ * This file is part of qbhy/simple-jwt.
+ *
+ * @link     https://github.com/qbhy/simple-jwt
+ * @document https://github.com/qbhy/simple-jwt/blob/master/README.md
+ * @contact  qbhy0715@qq.com
+ * @license  https://github.com/qbhy/simple-jwt/blob/master/LICENSE
  */
 
 namespace Qbhy\SimpleJwt\Laravel;
 
 use Illuminate\Foundation\Application as LaravelApplication;
-use Laravel\Lumen\Application as LumenApplication;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
+use Laravel\Lumen\Application as LumenApplication;
 use Qbhy\SimpleJwt\Encoders\Base64UrlSafeEncoder;
 use Qbhy\SimpleJwt\EncryptAdapters\PasswordHashEncrypter;
 use Qbhy\SimpleJwt\JWT;
@@ -27,7 +32,6 @@ class ServiceProvider extends LaravelServiceProvider
         $this->setupConfig();
 
         $this->app->singleton(JWTManager::class, function () {
-
             $config = config('simple-jwt');
 
             JWT::setSupportAlgos($config['algo']['providers'] ?? []);
@@ -36,7 +40,7 @@ class ServiceProvider extends LaravelServiceProvider
 
             $encrypter = JWT::getSupportAlgos()[$config['algo']['default'] ?? PasswordHashEncrypter::alg()];
 
-            return (new JWTManager(new $encrypter($config['secret']), new $encoder))
+            return (new JWTManager(new $encrypter($config['secret']), new $encoder()))
                 ->setTtl($config['ttl'] ?? 60)
                 ->setRefreshTtl($config['refresh_ttl'] ?? 20160);
         });
@@ -50,12 +54,11 @@ class ServiceProvider extends LaravelServiceProvider
         $configSource = realpath(__DIR__ . '/config/simple-jwt.php');
         if ($this->app instanceof LaravelApplication && $this->app->runningInConsole()) {
             $this->publishes([
-                $configSource => config_path('simple-jwt.php')
+                $configSource => config_path('simple-jwt.php'),
             ]);
         } elseif ($this->app instanceof LumenApplication) {
             $this->app->configure('simple-jwt');
         }
         $this->mergeConfigFrom($configSource, 'simple-jwt');
-
     }
 }

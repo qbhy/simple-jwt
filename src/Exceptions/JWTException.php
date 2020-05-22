@@ -1,14 +1,19 @@
 <?php
+
+declare(strict_types=1);
 /**
- * User: qbhy
- * Date: 2018/5/28
- * Time: 下午2:48
+ * This file is part of qbhy/simple-jwt.
+ *
+ * @link     https://github.com/qbhy/simple-jwt
+ * @document https://github.com/qbhy/simple-jwt/blob/master/README.md
+ * @contact  qbhy0715@qq.com
+ * @license  https://github.com/qbhy/simple-jwt/blob/master/LICENSE
  */
 
 namespace Qbhy\SimpleJwt\Exceptions;
 
-use Qbhy\SimpleJwt\JWT;
 use Exception;
+use Qbhy\SimpleJwt\JWT;
 
 class JWTException extends Exception
 {
@@ -16,8 +21,6 @@ class JWTException extends Exception
     protected $jwt;
 
     /**
-     * @param JWT $jwt
-     *
      * @return static
      */
     public function setJwt(JWT $jwt)
@@ -27,9 +30,6 @@ class JWTException extends Exception
         return $this;
     }
 
-    /**
-     * @return JWT
-     */
     public function getJwt(): JWT
     {
         return $this->jwt;

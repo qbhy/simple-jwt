@@ -1,8 +1,13 @@
 <?php
+
+declare(strict_types=1);
 /**
- * User: qbhy
- * Date: 2018/10/5
- * Time: 下午10:22
+ * This file is part of qbhy/simple-jwt.
+ *
+ * @link     https://github.com/qbhy/simple-jwt
+ * @document https://github.com/qbhy/simple-jwt/blob/master/README.md
+ * @contact  qbhy0715@qq.com
+ * @license  https://github.com/qbhy/simple-jwt/blob/master/LICENSE
  */
 
 namespace Qbhy\SimpleJwt;
@@ -14,5 +19,4 @@ interface TokenProviderInterface
     public function getToken();
 
     public function buildPayload(): array;
-
 }

@@ -1,28 +1,33 @@
 <?php
+
+declare(strict_types=1);
 /**
- * User: qbhy
- * Date: 2018/5/28
- * Time: 下午1:15
+ * This file is part of qbhy/simple-jwt.
+ *
+ * @link     https://github.com/qbhy/simple-jwt
+ * @document https://github.com/qbhy/simple-jwt/blob/master/README.md
+ * @contact  qbhy0715@qq.com
+ * @license  https://github.com/qbhy/simple-jwt/blob/master/LICENSE
  */
 
 require 'vendor/autoload.php';
 
-use Qbhy\SimpleJwt\JWTManager;
-use Qbhy\SimpleJwt\JWT;
 use Qbhy\SimpleJwt\Encoders;
 use Qbhy\SimpleJwt\EncryptAdapters;
 use Qbhy\SimpleJwt\Exceptions;
+use Qbhy\SimpleJwt\JWT;
+use Qbhy\SimpleJwt\JWTManager;
 
 $secret = '96qbhy/simple-jwt';
 
 $headers = [
     'ver' => 0.1,
-    't'   => 'user',
+    't' => 'user',
 ];
 
 $payload = [
     'user_id' => 'qbhy@gmail.com',
-    'tester'  => 'qbhy',
+    'tester' => 'qbhy',
 ];
 
 // 可以使用自己实现的 encrypter 进行签名和校验，请继承自 AbstractEncrypter 抽象类
@@ -61,28 +66,26 @@ class UserToken extends \Qbhy\SimpleJwt\AbstractTokenProvider
         return $this;
     }
 
-    protected function buildPayload(): array
-    {
-        return [
-            'user_id' => $this->user,
-        ];
-    }
-
     /**
-     * 返回 user 模型
+     * 返回 user 模型.
      */
     public function user()
     {
         return $this->user;
 //        return User::query()->findOrFail($this->getJwt()->getPayload()['user_id']);
     }
-}
 
+    protected function buildPayload(): array
+    {
+        return [
+            'user_id' => $this->user,
+        ];
+    }
+}
 
 // 生成 token，当然你也可以使用链式调用，例如:  $jwtManager->make($payload, $headers)->token()
 $token = $jwt0->token();
 print_r($token);
-
 
 $userTokenProvider = new UserToken($jwtManager);
 
@@ -90,9 +93,8 @@ print_r(PHP_EOL . $userTokenProvider->fromToken($token)->user() . PHP_EOL);
 
 var_dump($userTokenProvider->setUser('new user')->getToken());
 
-
 try {
-// 通过 token 得到 jwt 对象
+    // 通过 token 得到 jwt 对象
     $jwt1 = $jwtManager->fromToken($token);
 } catch (Exceptions\TokenExpiredException $tokenExpiredException) {
     // 如果已经过期了，也可以尝试刷新此 jwt ,第二个参数如果为 true 将忽略 refresh ttl 检查

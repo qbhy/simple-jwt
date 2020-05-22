@@ -1,32 +1,22 @@
 <?php
+
+declare(strict_types=1);
 /**
- * User: qbhy
- * Date: 2018/5/28
- * Time: 下午1:04
+ * This file is part of qbhy/simple-jwt.
+ *
+ * @link     https://github.com/qbhy/simple-jwt
+ * @document https://github.com/qbhy/simple-jwt/blob/master/README.md
+ * @contact  qbhy0715@qq.com
+ * @license  https://github.com/qbhy/simple-jwt/blob/master/LICENSE
  */
 
 namespace Qbhy\SimpleJwt\Interfaces;
 
-
 interface Encrypter
 {
-    /**
-     * @param string $signatureString
-     *
-     * @return string
-     */
     public function signature(string $signatureString): string;
 
-    /**
-     * @param string $signatureString
-     * @param string $signature
-     *
-     * @return bool
-     */
     public function check(string $signatureString, string $signature): bool;
 
-    /**
-     * @return string
-     */
     public static function alg(): string;
 }
