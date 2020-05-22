@@ -17,7 +17,6 @@ use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Laravel\Lumen\Application as LumenApplication;
 use Qbhy\SimpleJwt\Encoders\Base64UrlSafeEncoder;
 use Qbhy\SimpleJwt\EncryptAdapters\PasswordHashEncrypter;
-use Qbhy\SimpleJwt\JWT;
 use Qbhy\SimpleJwt\JWTManager;
 
 class ServiceProvider extends LaravelServiceProvider
@@ -34,11 +33,10 @@ class ServiceProvider extends LaravelServiceProvider
         $this->app->singleton(JWTManager::class, function () {
             $config = config('simple-jwt');
 
-            JWT::setSupportAlgos($config['algo']['providers'] ?? []);
 
             $encoder = $config['encoder'] ?? Base64UrlSafeEncoder::class;
 
-            $encrypter = JWT::getSupportAlgos()[$config['algo']['default'] ?? PasswordHashEncrypter::alg()];
+            $encrypter = $config['algo']['providers'][$config['algo']['default'] ?? PasswordHashEncrypter::alg()];
 
             return (new JWTManager(new $encrypter($config['secret']), new $encoder()))
                 ->setTtl($config['ttl'] ?? 60)
@@ -51,7 +49,7 @@ class ServiceProvider extends LaravelServiceProvider
      */
     protected function setupConfig()
     {
-        $configSource = realpath(__DIR__ . '/config/simple-jwt.php');
+        $configSource = realpath(__DIR__.'/config/simple-jwt.php');
         if ($this->app instanceof LaravelApplication && $this->app->runningInConsole()) {
             $this->publishes([
                 $configSource => config_path('simple-jwt.php'),

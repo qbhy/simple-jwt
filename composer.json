@@ -12,18 +12,38 @@
             "Qbhy\\SimpleJwt\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Qbhy\\SimpleJwt\\Tests\\": "tests/"
+        }
+    },
     "require": {
         "php": ">=7.1",
-        "ext-json": ">=1.0"
+        "ext-json": ">=1.0",
+        "brainmaestro/composer-git-hooks": "^2.8"
     },
     "license": "Apache-2.0",
     "require-dev": {
+        "phpunit/phpunit": "^9.1"
     },
     "extra": {
+        "hooks": {
+            "pre-commit": [
+                "echo committing as $(git config user.name)",
+                "vendor/bin/php-cs-fixer fix .",
+                "git add .",
+                "composer test"
+            ]
+        },
         "laravel": {
             "providers": [
                 "Qbhy\\SimpleJwt\\Laravel\\ServiceProvider"
             ]
         }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "post-install-cmd": "cghooks add --ignore-lock",
+        "post-update-cmd": "cghooks update"
     }
 }

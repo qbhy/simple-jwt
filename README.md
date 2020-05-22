@@ -48,7 +48,7 @@ print_r($token);
 
 try {
 // 通过 token 得到 jwt 对象
-    $jwt1 = $jwtManager->fromToken($token);
+    $jwt1 = $jwtManager->parse($token);
 } catch (Exceptions\TokenExpiredException $tokenExpiredException) {
     // 如果已经过期了，也可以尝试刷新此 jwt ,第二个参数如果为 true 将忽略 refresh ttl 检查
     $jwt1 = $jwtManager->refresh($tokenExpiredException->getJwt(), true);

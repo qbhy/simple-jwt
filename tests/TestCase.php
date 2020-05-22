@@ -10,13 +10,14 @@ declare(strict_types=1);
  * @license  https://github.com/qbhy/simple-jwt/blob/master/LICENSE
  */
 
-namespace Qbhy\SimpleJwt;
+namespace Qbhy\SimpleJwt\Tests;
 
-interface TokenProviderInterface
+use Qbhy\SimpleJwt\JWTManager;
+
+/**
+ * @internal
+ * @coversNothing
+ */
+class TestCase extends \PHPUnit\Framework\TestCase
 {
-    public static function fromToken(string $token);
-
-    public function getToken();
-
-    public function buildPayload(): array;
 }

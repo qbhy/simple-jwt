@@ -20,7 +20,7 @@ use Qbhy\SimpleJwt\JWTManager;
 /**
  * Trait TokenProviderAble.
  *
- * @mixin \Qbhy\SimpleJwt\TokenProviderInterface
+ * @mixin \Qbhy\SimpleJwt\Interfaces\TokenProviderInterface
  * @mixin \Illuminate\Database\Eloquent\Model
  */
 trait TokenProviderAble
@@ -35,7 +35,7 @@ trait TokenProviderAble
     public static function fromToken(string $token)
     {
         /** @var JWT $jwt */
-        $jwt = static::jwtManager()->fromToken($token);
+        $jwt = static::jwtManager()->parse($token);
 
         static::checkJwt($jwt);
 

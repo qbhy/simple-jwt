@@ -33,16 +33,4 @@ abstract class AbstractEncrypter implements Encrypter
     {
         return $this->signature($signatureString) === $signature;
     }
-
-    /**
-     * @param $secret
-     * @param string $defaultEncrypterClass
-     */
-    public static function formatEncrypter($secret, $defaultEncrypterClass): AbstractEncrypter
-    {
-        if ($secret instanceof AbstractEncrypter) {
-            return $secret;
-        }
-        return new $defaultEncrypterClass($secret);
-    }
 }

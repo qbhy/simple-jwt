@@ -12,22 +12,23 @@ declare(strict_types=1);
 
 namespace Qbhy\SimpleJwt;
 
-use Qbhy\SimpleJwt\Encoders\Base64Encoder;
+use Qbhy\SimpleJwt\Encoders\Base64UrlSafeEncoder;
 use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
+use Qbhy\SimpleJwt\Exceptions\InvalidTokenException;
+use Qbhy\SimpleJwt\Exceptions\SignatureException;
 use Qbhy\SimpleJwt\Exceptions\TokenExpiredException;
+use Qbhy\SimpleJwt\Exceptions\TokenNotActiveException;
 use Qbhy\SimpleJwt\Exceptions\TokenRefreshExpiredException;
 use Qbhy\SimpleJwt\Interfaces\Encoder;
+use Qbhy\SimpleJwt\Interfaces\Encrypter;
 
 class JWTManager
 {
-    /** @var JWTManager[] */
-    protected static $instances = [];
-
     /** @var int token 有效期,单位分钟 minutes */
     protected $ttl = 60 * 60;
 
     /** @var int token 过期多久后可以被刷新,单位分钟 minutes */
-    protected $refresh_ttl = 120 * 60;
+    protected $refreshTtl = 120 * 60;
 
     /** @var AbstractEncrypter */
     protected $encrypter;
@@ -39,14 +40,11 @@ class JWTManager
      * JWTManager constructor.
      *
      * @param AbstractEncrypter|string $secret
-     * @param null|Encoder $encoder
      */
-    public function __construct($secret, $encoder = null)
+    public function __construct($secret, ?Encoder $encoder = null)
     {
-        $this->encrypter = AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class);
-        $this->encoder = $encoder ?? new Base64Encoder();
-
-        static::$instances[$this->encrypter->getSecret()] = $this;
+        $this->encrypter = self::encrypter($secret, Md5Encrypter::class);
+        $this->encoder = $encoder ?? new Base64UrlSafeEncoder();
     }
 
     public function getTtl(): int
@@ -54,35 +52,36 @@ class JWTManager
         return $this->ttl;
     }
 
+    /**
+     * 单位：分钟
+     * @return $this
+     */
     public function setTtl(int $ttl): JWTManager
     {
-        $this->ttl = $ttl * 60;
+        $this->ttl = $ttl;
 
         return $this;
     }
 
     public function getRefreshTtl(): int
     {
-        return $this->refresh_ttl;
+        return $this->refreshTtl;
     }
 
-    public function setRefreshTtl(int $refresh_ttl): JWTManager
+    /**
+     * 单位：分钟
+     * @return $this
+     */
+    public function setRefreshTtl(int $ttl): JWTManager
     {
-        $this->refresh_ttl = $refresh_ttl * 60;
+        $this->refreshTtl = $ttl;
 
         return $this;
     }
 
-    public function getEncrypter(): AbstractEncrypter
+    public function getEncrypter(): Encrypter
     {
         return $this->encrypter;
-    }
-
-    public function setEncrypter(AbstractEncrypter $encrypter): JWTManager
-    {
-        $this->encrypter = $encrypter;
-
-        return $this;
     }
 
     public function getEncoder(): Encoder
@@ -90,79 +89,93 @@ class JWTManager
         return $this->encoder;
     }
 
-    public function setEncoder(Encoder $encoder): JWTManager
-    {
-        $this->encoder = $encoder;
-
-        return $this;
-    }
-
     /**
-     * @param AbstractEncrypter|string $secret
+     * 创建一个 jwt.
+     * @param  array  $payload
+     * @param  array  $headers
+     * @return JWT
      */
-    public static function getInstance($secret, Base64Encoder $encoder = null): JWTManager
-    {
-        $encrypter = AbstractEncrypter::formatEncrypter($secret, Md5Encrypter::class);
-
-        if (! isset(static::$instances[$encrypter->getSecret()])) {
-            static::$instances[$encrypter->getSecret()] = new JWTManager($secret, $encoder);
-        }
-
-        return static::$instances[$encrypter->getSecret()];
-    }
-
     public function make(array $payload, array $headers = []): JWT
     {
         $payload = array_merge($this->initPayload(), $payload);
 
-        $jti = hash('md5', base64_encode(json_encode($payload)) . $this->getEncrypter()->getSecret());
+        $jti = hash('md5', base64_encode(json_encode([$payload, $headers])) . $this->getEncrypter()->getSecret());
 
         $payload['jti'] = $jti;
 
-        return new JWT($headers, $payload, $this->getEncrypter(), $this->getEncoder());
+        return new JWT($this, $headers, $payload);
     }
 
+    /**
+     * 一些基础参数.
+     */
     public function initPayload(): array
     {
         $timestamp = time();
 
-        $payload = [
+        return [
             'sub' => '1',
             'iss' => 'http://' . ($_SERVER['SERVER_NAME'] ?? '') . ':' . ($_SERVER['SERVER_PORT'] ?? '') . ($_SERVER['REQUEST_URI'] ?? ''),
-            'exp' => $timestamp + $this->getTtl(),
+            'exp' => $timestamp + $this->getTtl() * 60,
             'iat' => $timestamp,
             'nbf' => $timestamp,
         ];
-
-        return $payload;
     }
 
     /**
+     * 解析一个jwt.
      * @throws Exceptions\InvalidTokenException
      * @throws Exceptions\SignatureException
      * @throws Exceptions\TokenExpiredException
      */
-    public function fromToken(string $token): JWT
+    public function parse(string $token): JWT
     {
-        $jwt = JWT::fromToken($token, $this->getEncrypter(), $this->getEncoder());
+        $encoder = $this->getEncoder();
+        $encrypter = $this->getEncrypter();
+        $arr = explode('.', $token);
 
-        $timestamp = time();
-
-        $payload = $jwt->getPayload();
-
-        if ($payload['exp'] <= $timestamp) {
-            throw (new TokenExpiredException('token expired'))->setJwt($jwt);
+        if (count($arr) !== 3) {
+            throw new InvalidTokenException('Invalid token');
         }
 
-        return $jwt;
+        $headers = @json_decode($encoder->decode($arr[0]), true);
+        $payload = @json_decode($encoder->decode($arr[1]), true);
+
+        $signatureString = "{$arr[0]}.{$arr[1]}";
+
+        if (! is_array($headers) || ! is_array($payload)) {
+            throw new InvalidTokenException('Invalid token');
+        }
+
+        if ($encrypter->check($signatureString, $encoder->decode($arr[2]))) {
+            $jwt = new JWT($this, $headers, $payload);
+            $timestamp = time();
+            $payload = $jwt->getPayload();
+
+            if (isset($payload['exp']) && $payload['exp'] <= $timestamp) {
+                throw (new TokenExpiredException('Token expired'))->setJwt($jwt);
+            }
+
+            if (isset($payload['nbf']) && $payload['nbf'] > $timestamp) {
+                throw (new TokenNotActiveException('Token not active'))->setJwt($jwt);
+            }
+
+            return $jwt;
+        }
+
+        throw new SignatureException('Invalid signature');
     }
 
+    /**
+     * @throws Exceptions\JWTException
+     * @return JWT
+     */
     public function refresh(JWT $jwt, bool $force = false)
     {
         $payload = $jwt->getPayload();
 
-        if (! $force) {
-            $refreshExp = $payload['exp'] + $this->getRefreshTtl();
+        if (! $force && isset($payload['exp'])) {
+            $refreshExp = $payload['exp'] + $this->getRefreshTtl() * 60;
 
             if ($refreshExp <= time()) {
                 throw (new TokenRefreshExpiredException('token expired, refresh is not supported'))->setJwt($jwt);
@@ -172,5 +185,17 @@ class JWTManager
         unset($payload['exp'], $payload['iat'], $payload['nbf']);
 
         return $this->make($payload, $jwt->getHeaders());
+    }
+
+    /**
+     * @param $secret
+     * @param string $defaultEncrypterClass
+     */
+    public static function encrypter($secret, string $default = Md5Encrypter::class): Encrypter
+    {
+        if ($secret instanceof Encrypter) {
+            return $secret;
+        }
+        return new $default($secret);
     }
 }
