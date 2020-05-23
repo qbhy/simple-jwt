@@ -9,7 +9,6 @@ declare(strict_types=1);
  * @contact  qbhy0715@qq.com
  * @license  https://github.com/qbhy/simple-jwt/blob/master/LICENSE
  */
-
 namespace Qbhy\SimpleJwt;
 
 use Doctrine\Common\Cache\Cache;
@@ -45,7 +44,7 @@ class JWTManager
     /**
      * JWTManager constructor.
      *
-     * @param  AbstractEncrypter|string  $secret
+     * @param AbstractEncrypter|string $secret
      */
     public function __construct($secret, ?Encoder $encoder = null, ?Cache $cache = null)
     {
@@ -98,15 +97,12 @@ class JWTManager
 
     /**
      * 创建一个 jwt.
-     * @param  array  $payload
-     * @param  array  $headers
-     * @return JWT
      */
     public function make(array $payload, array $headers = []): JWT
     {
         $payload = array_merge($this->initPayload(), $payload);
 
-        $jti = hash('md5', base64_encode(json_encode([$payload, $headers])).$this->getEncrypter()->getSecret());
+        $jti = hash('md5', base64_encode(json_encode([$payload, $headers])) . $this->getEncrypter()->getSecret());
 
         $payload['jti'] = $jti;
 
@@ -122,7 +118,7 @@ class JWTManager
 
         return [
             'sub' => '1',
-            'iss' => 'http://'.($_SERVER['SERVER_NAME'] ?? '').':'.($_SERVER['SERVER_PORT'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
+            'iss' => 'http://' . ($_SERVER['SERVER_NAME'] ?? '') . ':' . ($_SERVER['SERVER_PORT'] ?? '') . ($_SERVER['REQUEST_URI'] ?? ''),
             'exp' => $timestamp + $this->getTtl() * 60,
             'iat' => $timestamp,
             'nbf' => $timestamp,
@@ -150,7 +146,7 @@ class JWTManager
 
         $signatureString = "{$arr[0]}.{$arr[1]}";
 
-        if (!is_array($headers) || !is_array($payload)) {
+        if (! is_array($headers) || ! is_array($payload)) {
             throw new InvalidTokenException('Invalid token');
         }
 
@@ -167,7 +163,7 @@ class JWTManager
                 throw (new TokenNotActiveException('Token not active'))->setJwt($jwt);
             }
 
-            $blacklistCacheKey = 'jwt.blacklist:'.($payload['jti'] ?? $token);
+            $blacklistCacheKey = 'jwt.blacklist:' . ($payload['jti'] ?? $token);
             if ($this->cache->contains($blacklistCacheKey)) {
                 throw (new TokenBlacklistException('The token is already on the blacklist'))->setJwt($jwt);
             }
@@ -180,25 +176,25 @@ class JWTManager
 
     public function addBlacklist($jti)
     {
-        $blacklistCacheKey = 'jwt.blacklist:'.$jti;
+        $blacklistCacheKey = 'jwt.blacklist:' . $jti;
         $now = time();
         $this->cache->save($blacklistCacheKey, $now, $now + $this->getRefreshTtl() * 60);
     }
 
     public function removeBlacklist($jti)
     {
-        $this->cache->delete('jwt.blacklist:'.$jti);
+        $this->cache->delete('jwt.blacklist:' . $jti);
     }
 
     /**
-     * @return JWT
      * @throws Exceptions\JWTException
+     * @return JWT
      */
     public function refresh(JWT $jwt, bool $force = false)
     {
         $payload = $jwt->getPayload();
 
-        if (!$force && isset($payload['iat'])) {
+        if (! $force && isset($payload['iat'])) {
             $refreshExp = $payload['iat'] + $this->getRefreshTtl() * 60;
 
             if ($refreshExp <= time()) {
@@ -213,7 +209,7 @@ class JWTManager
 
     /**
      * @param $secret
-     * @param  string  $defaultEncrypterClass
+     * @param string $defaultEncrypterClass
      */
     public static function encrypter($secret, string $default = Md5Encrypter::class): Encrypter
     {

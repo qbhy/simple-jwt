@@ -9,7 +9,6 @@ declare(strict_types=1);
  * @contact  qbhy0715@qq.com
  * @license  https://github.com/qbhy/simple-jwt/blob/master/LICENSE
  */
-
 namespace Qbhy\SimpleJwt\Tests\Unit;
 
 use Qbhy\SimpleJwt\Encoders\Base64Encoder;
@@ -28,7 +27,7 @@ use Qbhy\SimpleJwt\Tests\TestCase;
 class JwtTest extends TestCase
 {
     /**
-     * 测试默认 加密器
+     * 测试默认 加密器.
      */
     public function testJwtManager()
     {
@@ -38,7 +37,7 @@ class JwtTest extends TestCase
     }
 
     /**
-     * 测试默认 md5 加密器
+     * 测试默认 md5 加密器.
      */
     public function testMd5JwtManager()
     {
@@ -48,7 +47,7 @@ class JwtTest extends TestCase
     }
 
     /**
-     * 测试默认 crypt 加密器
+     * 测试默认 crypt 加密器.
      */
     public function testCryptJwtManager()
     {
@@ -58,7 +57,7 @@ class JwtTest extends TestCase
     }
 
     /**
-     * 测试默认 crypt 加密器
+     * 测试默认 crypt 加密器.
      */
     public function testPasswordJwtManager()
     {
@@ -68,7 +67,7 @@ class JwtTest extends TestCase
     }
 
     /**
-     * 测试默认 crypt 加密器
+     * 测试默认 crypt 加密器.
      */
     public function testSHA1JwtManager()
     {

@@ -9,7 +9,6 @@ declare(strict_types=1);
  * @contact  qbhy0715@qq.com
  * @license  https://github.com/qbhy/simple-jwt/blob/master/LICENSE
  */
-
 namespace Qbhy\SimpleJwt\Laravel;
 
 use Illuminate\Foundation\Application as LaravelApplication;
@@ -33,7 +32,6 @@ class ServiceProvider extends LaravelServiceProvider
         $this->app->singleton(JWTManager::class, function () {
             $config = config('simple-jwt');
 
-
             $encoder = $config['encoder'] ?? Base64UrlSafeEncoder::class;
 
             $encrypter = $config['algo']['providers'][$config['algo']['default'] ?? PasswordHashEncrypter::alg()];
@@ -49,7 +47,7 @@ class ServiceProvider extends LaravelServiceProvider
      */
     protected function setupConfig()
     {
-        $configSource = realpath(__DIR__.'/config/simple-jwt.php');
+        $configSource = realpath(__DIR__ . '/config/simple-jwt.php');
         if ($this->app instanceof LaravelApplication && $this->app->runningInConsole()) {
             $this->publishes([
                 $configSource => config_path('simple-jwt.php'),
