@@ -12,10 +12,13 @@ declare(strict_types=1);
 
 namespace Qbhy\SimpleJwt;
 
+use Doctrine\Common\Cache\Cache;
+use Doctrine\Common\Cache\FilesystemCache;
 use Qbhy\SimpleJwt\Encoders\Base64UrlSafeEncoder;
 use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
 use Qbhy\SimpleJwt\Exceptions\InvalidTokenException;
 use Qbhy\SimpleJwt\Exceptions\SignatureException;
+use Qbhy\SimpleJwt\Exceptions\TokenBlacklistException;
 use Qbhy\SimpleJwt\Exceptions\TokenExpiredException;
 use Qbhy\SimpleJwt\Exceptions\TokenNotActiveException;
 use Qbhy\SimpleJwt\Exceptions\TokenRefreshExpiredException;
@@ -36,15 +39,19 @@ class JWTManager
     /** @var Encoder */
     protected $encoder;
 
+    /** @var Cache */
+    protected $cache;
+
     /**
      * JWTManager constructor.
      *
-     * @param AbstractEncrypter|string $secret
+     * @param  AbstractEncrypter|string  $secret
      */
-    public function __construct($secret, ?Encoder $encoder = null)
+    public function __construct($secret, ?Encoder $encoder = null, ?Cache $cache = null)
     {
         $this->encrypter = self::encrypter($secret, Md5Encrypter::class);
         $this->encoder = $encoder ?? new Base64UrlSafeEncoder();
+        $this->cache = $cache ?? new FilesystemCache(sys_get_temp_dir());
     }
 
     public function getTtl(): int
@@ -99,7 +106,7 @@ class JWTManager
     {
         $payload = array_merge($this->initPayload(), $payload);
 
-        $jti = hash('md5', base64_encode(json_encode([$payload, $headers])) . $this->getEncrypter()->getSecret());
+        $jti = hash('md5', base64_encode(json_encode([$payload, $headers])).$this->getEncrypter()->getSecret());
 
         $payload['jti'] = $jti;
 
@@ -115,7 +122,7 @@ class JWTManager
 
         return [
             'sub' => '1',
-            'iss' => 'http://' . ($_SERVER['SERVER_NAME'] ?? '') . ':' . ($_SERVER['SERVER_PORT'] ?? '') . ($_SERVER['REQUEST_URI'] ?? ''),
+            'iss' => 'http://'.($_SERVER['SERVER_NAME'] ?? '').':'.($_SERVER['SERVER_PORT'] ?? '').($_SERVER['REQUEST_URI'] ?? ''),
             'exp' => $timestamp + $this->getTtl() * 60,
             'iat' => $timestamp,
             'nbf' => $timestamp,
@@ -143,7 +150,7 @@ class JWTManager
 
         $signatureString = "{$arr[0]}.{$arr[1]}";
 
-        if (! is_array($headers) || ! is_array($payload)) {
+        if (!is_array($headers) || !is_array($payload)) {
             throw new InvalidTokenException('Invalid token');
         }
 
@@ -160,22 +167,39 @@ class JWTManager
                 throw (new TokenNotActiveException('Token not active'))->setJwt($jwt);
             }
 
+            $blacklistCacheKey = 'jwt.blacklist:'.($payload['jti'] ?? $token);
+            if ($this->cache->contains($blacklistCacheKey)) {
+                throw (new TokenBlacklistException('The token is already on the blacklist'))->setJwt($jwt);
+            }
+
             return $jwt;
         }
 
         throw new SignatureException('Invalid signature');
     }
 
+    public function addBlacklist($jti)
+    {
+        $blacklistCacheKey = 'jwt.blacklist:'.$jti;
+        $now = time();
+        $this->cache->save($blacklistCacheKey, $now, $now + $this->getRefreshTtl() * 60);
+    }
+
+    public function removeBlacklist($jti)
+    {
+        $this->cache->delete('jwt.blacklist:'.$jti);
+    }
+
     /**
-     * @throws Exceptions\JWTException
      * @return JWT
+     * @throws Exceptions\JWTException
      */
     public function refresh(JWT $jwt, bool $force = false)
     {
         $payload = $jwt->getPayload();
 
-        if (! $force && isset($payload['exp'])) {
-            $refreshExp = $payload['exp'] + $this->getRefreshTtl() * 60;
+        if (!$force && isset($payload['iat'])) {
+            $refreshExp = $payload['iat'] + $this->getRefreshTtl() * 60;
 
             if ($refreshExp <= time()) {
                 throw (new TokenRefreshExpiredException('token expired, refresh is not supported'))->setJwt($jwt);
@@ -189,7 +213,7 @@ class JWTManager
 
     /**
      * @param $secret
-     * @param string $defaultEncrypterClass
+     * @param  string  $defaultEncrypterClass
      */
     public static function encrypter($secret, string $default = Md5Encrypter::class): Encrypter
     {
