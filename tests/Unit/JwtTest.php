@@ -16,6 +16,7 @@ use Qbhy\SimpleJwt\EncryptAdapters\CryptEncrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\PasswordHashEncrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\SHA1Encrypter;
+use Qbhy\SimpleJwt\Exceptions\TokenBlacklistException;
 use Qbhy\SimpleJwt\JWT;
 use Qbhy\SimpleJwt\JWTManager;
 use Qbhy\SimpleJwt\Tests\TestCase;
@@ -74,6 +75,25 @@ class JwtTest extends TestCase
         $secret = 'qbhy/simple-jwt';
         $this->assertTrue($this->check(new JWTManager(new SHA1Encrypter($secret))));
         $this->assertTrue($this->check(new JWTManager(new SHA1Encrypter($secret), new Base64Encoder())));
+    }
+
+    /**
+     * 测试默认黑名单功能.
+     */
+    public function testJwtManagerBlacklist()
+    {
+        $secret = 'qbhy/simple-jwt';
+        $jwtManager = new JWTManager(new SHA1Encrypter($secret));
+
+        $jwt = $jwtManager->make(['test' => 'test']);
+
+        $jwtManager->addBlacklist($jwt->getPayload()['jti']);
+        try {
+            $jwtManager->parse($jwt->token());
+            $this->assertTrue(false, 'jwt 黑名单测试出错');
+        } catch (\Throwable $exception) {
+            $this->assertTrue($exception instanceof TokenBlacklistException, $exception->getMessage());
+        }
     }
 
     public function check(JWTManager $manager)
