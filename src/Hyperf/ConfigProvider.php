@@ -11,10 +11,25 @@ declare(strict_types=1);
  */
 namespace Qbhy\SimpleJwt\Hyperf;
 
+use Hyperf\Contract\ConfigInterface;
+use Hyperf\Contract\ContainerInterface;
+use Hyperf\Utils\ApplicationContext;
+use Qbhy\SimpleJwt\JWTManager;
+
 class ConfigProvider
 {
     public function __invoke(): array
     {
+        if (ApplicationContext::hasContainer()) {
+            /** @var ContainerInterface $container */
+            $container = ApplicationContext::getContainer();
+            $container->define(JWTManager::class, function () use ($container) {
+                return new JWTManager(
+                    $container->get(ConfigInterface::class)->get('simple-jwt', ['secret' => env('SIMPLE_JWT_SECRET')])
+                );
+            });
+        }
+
         return [
             // 合并到  config/autoload/dependencies.php 文件
             'dependencies' => [],
