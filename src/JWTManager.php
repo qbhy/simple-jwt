@@ -15,6 +15,7 @@ use Doctrine\Common\Cache\Cache;
 use Doctrine\Common\Cache\FilesystemCache;
 use Qbhy\SimpleJwt\Encoders\Base64UrlSafeEncoder;
 use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
+use Qbhy\SimpleJwt\EncryptAdapters\PasswordHashEncrypter;
 use Qbhy\SimpleJwt\Exceptions\InvalidTokenException;
 use Qbhy\SimpleJwt\Exceptions\SignatureException;
 use Qbhy\SimpleJwt\Exceptions\TokenBlacklistException;
@@ -26,11 +27,10 @@ use Qbhy\SimpleJwt\Interfaces\Encrypter;
 
 class JWTManager
 {
-    /** @var int token 有效期,单位分钟 minutes */
-    protected $ttl = 60 * 60;
+    protected $ttl;
 
     /** @var int token 过期多久后可以被刷新,单位分钟 minutes */
-    protected $refreshTtl = 120 * 60;
+    protected $refreshTtl;
 
     /** @var AbstractEncrypter */
     protected $encrypter;
@@ -42,15 +42,23 @@ class JWTManager
     protected $cache;
 
     /**
-     * JWTManager constructor.
-     *
-     * @param AbstractEncrypter|string $secret
+     * @var array
      */
-    public function __construct($secret, ?Encoder $encoder = null, ?Cache $cache = null)
+    protected $drivers;
+
+    /**
+     * JWTManager constructor.
+     */
+    public function __construct(array $config)
     {
-        $this->encrypter = self::encrypter($secret, Md5Encrypter::class);
-        $this->encoder = $encoder ?? new Base64UrlSafeEncoder();
-        $this->cache = $cache ?? new FilesystemCache(sys_get_temp_dir());
+        $this->verifyConfig($config);
+
+        $this->resolveEncrypter($config);
+
+        $this->encoder = $config['encoder'] ?? new Base64UrlSafeEncoder();
+        $this->cache = $config['cache'] ?? new FilesystemCache(sys_get_temp_dir());
+        $this->ttl = $config['ttl'] ?? 60 * 60; // 单位秒
+        $this->refreshTtl = $config['refresh_ttl'] ?? 60 * 60 * 24 * 7; // 单位秒，默认一周内可以刷新
     }
 
     public function getTtl(): int
@@ -217,5 +225,30 @@ class JWTManager
             return $secret;
         }
         return new $default($secret);
+    }
+
+    protected function verifyConfig(array $config)
+    {
+        if (! isset($config['secret'])) {
+            throw new \InvalidArgumentException('Secret is required.');
+        }
+    }
+
+    protected function resolveEncrypter(array $config)
+    {
+        $this->drivers = $config['drivers'] ?? [];
+
+        $default = $config['default'] ?? PasswordHashEncrypter::class;
+
+        if (class_exists($default)) {
+            $this->encrypter = new $default($config['secret']);
+            return;
+        }
+        if (isset($this->drivers[$default])) {
+            $class = $this->drivers[$default];
+            $this->encrypter = new $class($config['secret']);
+        } else {
+            $this->encrypter = new PasswordHashEncrypter($config['secret']);
+        }
     }
 }

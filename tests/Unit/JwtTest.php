@@ -11,7 +11,7 @@ declare(strict_types=1);
  */
 namespace Qbhy\SimpleJwt\Tests\Unit;
 
-use Qbhy\SimpleJwt\Encoders\Base64Encoder;
+use Qbhy\SimpleJwt\Encoders\Base64UrlSafeEncoder;
 use Qbhy\SimpleJwt\EncryptAdapters\CryptEncrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\PasswordHashEncrypter;
@@ -32,9 +32,8 @@ class JwtTest extends TestCase
      */
     public function testJwtManager()
     {
-        $secret = 'qbhy/simple-jwt';
-        $this->assertTrue($this->check(new JWTManager($secret)));
-        $this->assertTrue($this->check(new JWTManager($secret, new Base64Encoder())));
+        $this->assertTrue($this->check($this->manager()));
+        $this->assertTrue($this->check($this->manager(null, new Base64UrlSafeEncoder())));
     }
 
     /**
@@ -43,8 +42,8 @@ class JwtTest extends TestCase
     public function testMd5JwtManager()
     {
         $secret = 'qbhy/simple-jwt';
-        $this->assertTrue($this->check(new JWTManager(new Md5Encrypter($secret))));
-        $this->assertTrue($this->check(new JWTManager(new Md5Encrypter($secret), new Base64Encoder())));
+        $this->assertTrue($this->check($this->manager(Md5Encrypter::class)));
+        $this->assertTrue($this->check($this->manager(Md5Encrypter::class, new Base64UrlSafeEncoder())));
     }
 
     /**
@@ -52,9 +51,8 @@ class JwtTest extends TestCase
      */
     public function testCryptJwtManager()
     {
-        $secret = 'qbhy/simple-jwt';
-        $this->assertTrue($this->check(new JWTManager(new CryptEncrypter($secret))));
-        $this->assertTrue($this->check(new JWTManager(new CryptEncrypter($secret), new Base64Encoder())));
+        $this->assertTrue($this->check($this->manager(CryptEncrypter::class)));
+        $this->assertTrue($this->check($this->manager(CryptEncrypter::class, new Base64UrlSafeEncoder())));
     }
 
     /**
@@ -62,9 +60,8 @@ class JwtTest extends TestCase
      */
     public function testPasswordJwtManager()
     {
-        $secret = 'qbhy/simple-jwt';
-        $this->assertTrue($this->check(new JWTManager(new PasswordHashEncrypter($secret))));
-        $this->assertTrue($this->check(new JWTManager(new PasswordHashEncrypter($secret), new Base64Encoder())));
+        $this->assertTrue($this->check($this->manager(PasswordHashEncrypter::class)));
+        $this->assertTrue($this->check($this->manager(PasswordHashEncrypter::class, new Base64UrlSafeEncoder())));
     }
 
     /**
@@ -72,9 +69,8 @@ class JwtTest extends TestCase
      */
     public function testSHA1JwtManager()
     {
-        $secret = 'qbhy/simple-jwt';
-        $this->assertTrue($this->check(new JWTManager(new SHA1Encrypter($secret))));
-        $this->assertTrue($this->check(new JWTManager(new SHA1Encrypter($secret), new Base64Encoder())));
+        $this->assertTrue($this->check($this->manager(SHA1Encrypter::class)));
+        $this->assertTrue($this->check($this->manager(SHA1Encrypter::class, new Base64UrlSafeEncoder())));
     }
 
     /**
@@ -83,7 +79,7 @@ class JwtTest extends TestCase
     public function testJwtManagerBlacklist()
     {
         $secret = 'qbhy/simple-jwt';
-        $jwtManager = new JWTManager(new SHA1Encrypter($secret));
+        $jwtManager = new JWTManager(compact('secret'));
 
         $jwt = $jwtManager->make(['test' => 'test']);
 
@@ -96,12 +92,21 @@ class JwtTest extends TestCase
         }
     }
 
-    public function check(JWTManager $manager)
+    protected function check(JWTManager $manager)
     {
         $jwt = $manager->make(['user_id' => 1], ['header' => 'test']);
 
         $token = $jwt->token();
 
         return $manager->parse($token) instanceof JWT;
+    }
+
+    protected function manager($driver = null, $encoder = null)
+    {
+        return new JWTManager([
+            'secret' => 'secret',
+            'default' => $driver,
+            'encode' => $encoder,
+        ]);
     }
 }

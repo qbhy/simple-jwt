@@ -14,37 +14,50 @@ use Qbhy\SimpleJwt\EncryptAdapters as Encrypter;
 
 return [
     /*
+     * 必填
      * jwt 服务端身份标识
      */
     'secret' => env('SIMPLE_JWT_SECRET'),
 
     /*
+     * 可选配置
      * jwt 生命周期，单位分钟
      */
-    'ttl' => env('SIMPLE_JWT_TTL', 60),
+    'ttl' => env('SIMPLE_JWT_TTL', 60 * 60),
 
     /*
+     * 可选配置
      * 允许过期多久以内的 token 进行刷新
      */
-    'refresh_ttl' => env('SIMPLE_REFRESH_TTL', 20160),
+    'refresh_ttl' => env('SIMPLE_JWT_REFRESH_TTL', 60 * 60 * 24 * 7),
 
     /*
-     * 加密算法支持
+     * 可选配置
+     * 默认使用的加密类
      */
-    'algo' => [
-        'default' => env('SIMPLE_JWT_ALGO', Encrypter\PasswordHashEncrypter::alg()),
+    'default' => Encrypter\PasswordHashEncrypter::class,
 
-        'providers' => [
-            Encrypter\Md5Encrypter::alg() => Encrypter\Md5Encrypter::class,
-            Encrypter\CryptEncrypter::alg() => Encrypter\CryptEncrypter::class,
-            Encrypter\PasswordHashEncrypter::alg() => Encrypter\PasswordHashEncrypter::class,
-            Encrypter\SHA1Encrypter::alg() => Encrypter\SHA1Encrypter::class,
-        ],
+    /*
+     * 可选配置
+     * 加密类必须实现 Qbhy\SimpleJwt\Interfaces\Encrypter 接口
+     */
+    'drivers' => [
+        Encrypter\PasswordHashEncrypter::alg() => Encrypter\PasswordHashEncrypter::class,
+        Encrypter\CryptEncrypter::alg() => Encrypter\CryptEncrypter::class,
+        Encrypter\SHA1Encrypter::alg() => Encrypter\SHA1Encrypter::class,
+        Encrypter\Md5Encrypter::alg() => Encrypter\Md5Encrypter::class,
     ],
 
     /*
+     * 可选配置
      * 编码类
      */
-    'encoder' => Encoders\Base64UrlSafeEncoder::class,
+    'encoder' => new Encoders\Base64UrlSafeEncoder(),
+
+    /*
+     * 可选配置
+     * 缓存类
+     */
+    'cache' => new \Doctrine\Common\Cache\FilesystemCache(sys_get_temp_dir()),
     //    'encoder'     => Encoders\Base64Encoder::class,
 ];

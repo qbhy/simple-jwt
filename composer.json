@@ -37,6 +37,9 @@
                 "composer test"
             ]
         },
+        "hyperf": {
+            "config": "Qbhy\\SimpleJwt\\Hyperf\\ConfigProvider"
+        },
         "laravel": {
             "providers": [
                 "Qbhy\\SimpleJwt\\Laravel\\ServiceProvider"

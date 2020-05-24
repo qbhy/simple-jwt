@@ -14,8 +14,6 @@ namespace Qbhy\SimpleJwt\Laravel;
 use Illuminate\Foundation\Application as LaravelApplication;
 use Illuminate\Support\ServiceProvider as LaravelServiceProvider;
 use Laravel\Lumen\Application as LumenApplication;
-use Qbhy\SimpleJwt\Encoders\Base64UrlSafeEncoder;
-use Qbhy\SimpleJwt\EncryptAdapters\PasswordHashEncrypter;
 use Qbhy\SimpleJwt\JWTManager;
 
 class ServiceProvider extends LaravelServiceProvider
@@ -30,15 +28,7 @@ class ServiceProvider extends LaravelServiceProvider
         $this->setupConfig();
 
         $this->app->singleton(JWTManager::class, function () {
-            $config = config('simple-jwt');
-
-            $encoder = $config['encoder'] ?? Base64UrlSafeEncoder::class;
-
-            $encrypter = $config['algo']['providers'][$config['algo']['default'] ?? PasswordHashEncrypter::alg()];
-
-            return (new JWTManager(new $encrypter($config['secret']), new $encoder()))
-                ->setTtl($config['ttl'] ?? 60)
-                ->setRefreshTtl($config['refresh_ttl'] ?? 20160);
+            return new JWTManager(config('simple-jwt'));
         });
     }
 
@@ -50,7 +40,7 @@ class ServiceProvider extends LaravelServiceProvider
         $configSource = realpath(__DIR__ . '/config/simple-jwt.php');
         if ($this->app instanceof LaravelApplication && $this->app->runningInConsole()) {
             $this->publishes([
-                $configSource => config_path('simple-jwt.php'),
+                $configSource => base_path('config/simple-jwt.php'),
             ]);
         } elseif ($this->app instanceof LumenApplication) {
             $this->app->configure('simple-jwt');
