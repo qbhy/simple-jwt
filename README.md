@@ -1,5 +1,5 @@
 # simple-jwt
-超简单的 jwt 实现
+超简单的 jwt 实现。支持 Laravel、Hyperf 以及支持 composer 的其他框架
 
 ## 如何安装 ？
 ```bash
@@ -32,7 +32,7 @@ $encrypter = new EncryptAdapters\Md5Encrypter($secret);
 $encoder = new Encoders\Base64Encoder();
 
 // 实例化 jwt manager
-$jwtManager = new JWTManager($secret, $encoder);
+$jwtManager = new JWTManager(compact('secret', 'encode'));
 
 // 设置 token 有效时间，单位 分钟
 $jwtManager->setTtl(60);
@@ -63,13 +63,7 @@ $jwt1->getHeaders();
 print_r($jwt1);
 
 // 自己实例化 jwt ，完全纯净的 jwt ，无多余 payload
-$jwt2 = new JWT($headers, $payload, $secret);
-
-// 仍然可以自定义 encoder 和 encrypter
-$jwt2->setEncoder($encoder);
-$jwt2->setEncrypter($encrypter);
-
+$jwt2 = new JWT($jwtManager, $headers, $payload);
 ```
-[基本使用](/example.php)
 
 96qbhy@gmail.com  
