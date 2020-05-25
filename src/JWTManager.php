@@ -14,7 +14,6 @@ namespace Qbhy\SimpleJwt;
 use Doctrine\Common\Cache\Cache;
 use Doctrine\Common\Cache\FilesystemCache;
 use Qbhy\SimpleJwt\Encoders\Base64UrlSafeEncoder;
-use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\PasswordHashEncrypter;
 use Qbhy\SimpleJwt\Exceptions\InvalidTokenException;
 use Qbhy\SimpleJwt\Exceptions\SignatureException;
@@ -47,13 +46,22 @@ class JWTManager
     protected $drivers;
 
     /**
+     * @var string
+     */
+    protected $secret;
+
+    /**
      * JWTManager constructor.
      */
     public function __construct(array $config)
     {
         $this->verifyConfig($config);
 
-        $this->resolveEncrypter($config);
+        $this->secret = $config['secret'];
+
+        $this->drivers = $config['drivers'] ?? [];
+
+        $this->resolveEncrypter($config['default'] ?? PasswordHashEncrypter::class);
 
         $this->encoder = $config['encoder'] ?? new Base64UrlSafeEncoder();
         $this->cache = $config['cache'] ?? new FilesystemCache(sys_get_temp_dir());
@@ -215,16 +223,10 @@ class JWTManager
         return $this->make($payload, $jwt->getHeaders());
     }
 
-    /**
-     * @param $secret
-     * @param string $defaultEncrypterClass
-     */
-    public static function encrypter($secret, string $default = Md5Encrypter::class): Encrypter
+    public function useEncrypter(string $encrypter): JWTManager
     {
-        if ($secret instanceof Encrypter) {
-            return $secret;
-        }
-        return new $default($secret);
+        $this->resolveEncrypter($encrypter);
+        return $this;
     }
 
     protected function verifyConfig(array $config)
@@ -234,21 +236,17 @@ class JWTManager
         }
     }
 
-    protected function resolveEncrypter(array $config)
+    protected function resolveEncrypter($encrypter)
     {
-        $this->drivers = $config['drivers'] ?? [];
-
-        $default = $config['default'] ?? PasswordHashEncrypter::class;
-
-        if (class_exists($default)) {
-            $this->encrypter = new $default($config['secret']);
+        if (class_exists($encrypter)) {
+            $this->encrypter = new $encrypter($this->secret);
             return;
         }
-        if (isset($this->drivers[$default])) {
-            $class = $this->drivers[$default];
-            $this->encrypter = new $class($config['secret']);
+        if (isset($this->drivers[$encrypter])) {
+            $encrypter = $this->drivers[$encrypter];
+            $this->encrypter = new $encrypter($this->secret);
         } else {
-            $this->encrypter = new PasswordHashEncrypter($config['secret']);
+            $this->encrypter = new PasswordHashEncrypter($this->secret);
         }
     }
 }

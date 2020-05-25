@@ -32,7 +32,10 @@ class JwtTest extends TestCase
      */
     public function testJwtManager()
     {
-        $this->assertTrue($this->check($this->manager()));
+        $manager = $this->manager();
+        $this->assertTrue($this->check($manager));
+        $this->assertTrue($this->check($manager->useEncrypter(Md5Encrypter::alg())));
+        $this->assertTrue($this->check($manager->useEncrypter(Md5Encrypter::class)));
         $this->assertTrue($this->check($this->manager(null, new Base64UrlSafeEncoder())));
     }
 
