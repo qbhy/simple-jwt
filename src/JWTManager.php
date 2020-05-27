@@ -51,6 +51,11 @@ class JWTManager
     protected $secret;
 
     /**
+     * @var string
+     */
+    protected $prefix;
+
+    /**
      * JWTManager constructor.
      */
     public function __construct(array $config)
@@ -58,8 +63,8 @@ class JWTManager
         $this->verifyConfig($config);
 
         $this->secret = $config['secret'];
-
         $this->drivers = $config['drivers'] ?? [];
+        $this->prefix = $config['prefix'] ?? 'default';
 
         $this->resolveEncrypter($config['default'] ?? PasswordHashEncrypter::class);
 
@@ -179,7 +184,7 @@ class JWTManager
                 throw (new TokenNotActiveException('Token not active'))->setJwt($jwt);
             }
 
-            $blacklistCacheKey = 'jwt.blacklist:' . ($payload['jti'] ?? $token);
+            $blacklistCacheKey = $this->blacklistKey($payload['jti'] ?? $token);
             if ($this->cache->contains($blacklistCacheKey)) {
                 throw (new TokenBlacklistException('The token is already on the blacklist'))->setJwt($jwt);
             }
@@ -192,14 +197,13 @@ class JWTManager
 
     public function addBlacklist($jti)
     {
-        $blacklistCacheKey = 'jwt.blacklist:' . $jti;
         $now = time();
-        $this->cache->save($blacklistCacheKey, $now, $now + $this->getRefreshTtl() * 60);
+        $this->cache->save($this->blacklistKey($jti), $now, $now + $this->getRefreshTtl() * 60);
     }
 
     public function removeBlacklist($jti)
     {
-        $this->cache->delete('jwt.blacklist:' . $jti);
+        $this->cache->delete($this->blacklistKey($jti));
     }
 
     /**
@@ -227,6 +231,11 @@ class JWTManager
     {
         $this->resolveEncrypter($encrypter);
         return $this;
+    }
+
+    protected function blacklistKey($jti)
+    {
+        return "jwt.blacklist.prefix:{$this->prefix}.{$jti}";
     }
 
     protected function verifyConfig(array $config)

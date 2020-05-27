@@ -56,8 +56,14 @@ return [
 
     /*
      * 可选配置
-     * 缓存类
+     * 缓存类，用于黑名单
      */
     'cache' => new \Doctrine\Common\Cache\FilesystemCache(sys_get_temp_dir()),
     //    'encoder'     => Encoders\Base64Encoder::class,
+
+    /*
+     * 可选配置
+     * 缓存前缀
+     */
+    'prefix' => env('JWT_CACHE_PREFIX', 'default'),
 ];
