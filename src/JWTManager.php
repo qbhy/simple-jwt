@@ -184,8 +184,7 @@ class JWTManager
                 throw (new TokenNotActiveException('Token not active'))->setJwt($jwt);
             }
 
-            $blacklistCacheKey = $this->blacklistKey($payload['jti'] ?? $token);
-            if ($this->cache->contains($blacklistCacheKey)) {
+            if ($this->hasBlacklist($jwt)) {
                 throw (new TokenBlacklistException('The token is already on the blacklist'))->setJwt($jwt);
             }
 
@@ -195,15 +194,24 @@ class JWTManager
         throw new SignatureException('Invalid signature');
     }
 
-    public function addBlacklist($jti)
+    public function addBlacklist($jwt)
     {
         $now = time();
-        $this->cache->save($this->blacklistKey($jti), $now, $now + $this->getRefreshTtl() * 60);
+        $this->cache->save(
+            $this->blacklistKey($jwt),
+            $now,
+            ($jwt instanceof JWT ? ($jwt->getPayload()['iat'] || $now) : $now) + $this->getRefreshTtl() * 60 // 存到该 token 超过 refresh 即可
+        );
     }
 
-    public function removeBlacklist($jti)
+    public function removeBlacklist($jwt)
     {
-        $this->cache->delete($this->blacklistKey($jti));
+        return $this->cache->delete($this->blacklistKey($jwt));
+    }
+
+    public function hasBlacklist($jwt)
+    {
+        return $this->cache->contains($this->blacklistKey($jwt));
     }
 
     /**
@@ -233,8 +241,14 @@ class JWTManager
         return $this;
     }
 
-    protected function blacklistKey($jti)
+    /**
+     * @param JWT|string $jwt
+     * @return string
+     */
+    protected function blacklistKey($jwt)
     {
+        $jti = $jwt instanceof JWT ? ($jwt->getPayload()['jti'] ?? $jwt->token()) : $jwt;
+
         return "jwt.blacklist.prefix:{$this->prefix}.{$jti}";
     }
 

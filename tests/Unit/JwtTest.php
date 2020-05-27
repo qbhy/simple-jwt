@@ -86,7 +86,7 @@ class JwtTest extends TestCase
 
         $jwt = $jwtManager->make(['test' => 'test']);
 
-        $jwtManager->addBlacklist($jwt->getPayload()['jti']);
+        $jwtManager->addBlacklist($jwt);
         try {
             $jwtManager->parse($jwt->token());
             $this->assertTrue(false, 'jwt 黑名单测试出错');
