@@ -79,6 +79,15 @@ class JWTManager
         return $this->ttl;
     }
 
+    public function getCache(): Cache
+    {
+        if ($this->cache instanceof Cache) {
+            return $this->cache;
+        }
+
+        return $this->cache = is_callable($this->cache) ? call_user_func_array($this->cache, [$this]) : new FilesystemCache(sys_get_temp_dir());
+    }
+
     /**
      * 单位：分钟
      * @return $this
@@ -197,7 +206,7 @@ class JWTManager
     public function addBlacklist($jwt)
     {
         $now = time();
-        $this->cache->save(
+        $this->getCache()->save(
             $this->blacklistKey($jwt),
             $now,
             ($jwt instanceof JWT ? ($jwt->getPayload()['iat'] || $now) : $now) + $this->getRefreshTtl() * 60 // 存到该 token 超过 refresh 即可
@@ -206,12 +215,12 @@ class JWTManager
 
     public function removeBlacklist($jwt)
     {
-        return $this->cache->delete($this->blacklistKey($jwt));
+        return $this->getCache()->delete($this->blacklistKey($jwt));
     }
 
     public function hasBlacklist($jwt)
     {
-        return $this->cache->contains($this->blacklistKey($jwt));
+        return $this->getCache()->contains($this->blacklistKey($jwt));
     }
 
     /**

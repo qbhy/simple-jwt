@@ -30,9 +30,12 @@ $encrypter = new EncryptAdapters\Md5Encrypter($secret);
 
 // 可以使用自己实现的 encoder 进行编码，请实现 Encoder 接口
 $encoder = new Encoders\Base64Encoder();
+$cache = function(JWTManager $JWTManager){
+return new \Doctrine\Common\Cache\FilesystemCache(sys_get_temp_dir());
+};
 
 // 实例化 jwt manager
-$jwtManager = new JWTManager(compact('secret', 'encode'));
+$jwtManager = new JWTManager(compact('secret', 'encode','cache'));
 
 // 设置 token 有效时间，单位 分钟
 $jwtManager->setTtl(60);

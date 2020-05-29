@@ -110,6 +110,9 @@ class JwtTest extends TestCase
             'secret' => 'secret',
             'default' => $driver,
             'encode' => $encoder,
+            'cache' => function (JWTManager $JWTManager) {
+                return new \Doctrine\Common\Cache\FilesystemCache(sys_get_temp_dir());
+            },
         ]);
     }
 }
