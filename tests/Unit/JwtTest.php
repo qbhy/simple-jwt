@@ -101,6 +101,9 @@ class JwtTest extends TestCase
 
         $token = $jwt->token();
 
+        $manager->addBlacklist($jwt);
+        $manager->removeBlacklist($jwt);
+
         return $manager->parse($token) instanceof JWT;
     }
 
