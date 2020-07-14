@@ -110,7 +110,7 @@ class JWTManager
      */
     public function setRefreshTtl(int $ttl): JWTManager
     {
-        $this->refreshTtl = $ttl;
+        $this->refreshTtl = $ttl * 60;
 
         return $this;
     }
@@ -209,7 +209,7 @@ class JWTManager
         $this->getCache()->save(
             $this->blacklistKey($jwt),
             $now,
-            ($jwt instanceof JWT ? ($jwt->getPayload()['iat'] || $now) : $now) + $this->getRefreshTtl() * 60 // 存到该 token 超过 refresh 即可
+            ($jwt instanceof JWT ? ($jwt->getPayload()['iat'] || $now) : $now) + $this->getRefreshTtl() // 存到该 token 超过 refresh 即可
         );
     }
 
@@ -232,7 +232,7 @@ class JWTManager
         $payload = $jwt->getPayload();
 
         if (! $force && isset($payload['iat'])) {
-            $refreshExp = $payload['iat'] + $this->getRefreshTtl() * 60;
+            $refreshExp = $payload['iat'] + $this->getRefreshTtl();
 
             if ($refreshExp <= time()) {
                 throw (new TokenRefreshExpiredException('token expired, refresh is not supported'))->setJwt($jwt);
