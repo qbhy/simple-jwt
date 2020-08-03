@@ -70,8 +70,8 @@ class JWTManager
 
         $this->encoder = $config['encoder'] ?? new Base64UrlSafeEncoder();
         $this->cache = $config['cache'] ?? new FilesystemCache(sys_get_temp_dir());
-        $this->ttl = $config['ttl'] ?? 60 * 60; // 单位秒
-        $this->refreshTtl = $config['refresh_ttl'] ?? 60 * 60 * 24 * 7; // 单位秒，默认一周内可以刷新
+        $this->ttl = $config['ttl'] ?? 60;
+        $this->refreshTtl = $config['refresh_ttl'] ?? 60 * 24 * 7; // 单位秒，默认一周内可以刷新
     }
 
     public function getTtl(): int
