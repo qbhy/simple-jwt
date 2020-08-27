@@ -185,16 +185,16 @@ class JWTManager
             $timestamp = time();
             $payload = $jwt->getPayload();
 
+            if ($this->hasBlacklist($jwt)) {
+                throw (new TokenBlacklistException('The token is already on the blacklist'))->setJwt($jwt);
+            }
+
             if (isset($payload['exp']) && $payload['exp'] <= $timestamp) {
                 throw (new TokenExpiredException('Token expired'))->setJwt($jwt);
             }
 
             if (isset($payload['nbf']) && $payload['nbf'] > $timestamp) {
                 throw (new TokenNotActiveException('Token not active'))->setJwt($jwt);
-            }
-
-            if ($this->hasBlacklist($jwt)) {
-                throw (new TokenBlacklistException('The token is already on the blacklist'))->setJwt($jwt);
             }
 
             return $jwt;
