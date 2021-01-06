@@ -27,7 +27,7 @@
         "phpunit/phpunit": "^9.1",
         "friendsofphp/php-cs-fixer": "^2.16",
         "brainmaestro/composer-git-hooks": "^2.8",
-        "hyperf/utils": "^1.1"
+        "hyperf/utils": "~2.1.0"
     },
     "extra": {
         "hooks": {
