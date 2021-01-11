@@ -17,12 +17,12 @@ class PasswordHashEncrypter extends AbstractEncrypter
 {
     public function signature(string $signatureString): string
     {
-        return password_hash($signatureString . $this->getSecret(), PASSWORD_BCRYPT);
+        return password_hash(md5($signatureString . $this->getSecret()), PASSWORD_BCRYPT);
     }
 
     public function check(string $signatureString, string $signature): bool
     {
-        return password_verify($signatureString . $this->getSecret(), $signature);
+        return password_verify(md5($signatureString . $this->getSecret()), $signature);
     }
 
     public static function alg(): string
