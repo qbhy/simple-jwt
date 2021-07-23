@@ -163,6 +163,33 @@ class JWTManager
      */
     public function parse(string $token): JWT
     {
+        $jwt = $this->justParse($token);
+        $timestamp = time();
+        $payload = $jwt->getPayload();
+
+        if ($this->hasBlacklist($jwt)) {
+            throw (new TokenBlacklistException('The token is already on the blacklist'))->setJwt($jwt);
+        }
+
+        if (isset($payload['exp']) && $payload['exp'] <= $timestamp) {
+            throw (new TokenExpiredException('Token expired'))->setJwt($jwt);
+        }
+
+        if (isset($payload['nbf']) && $payload['nbf'] > $timestamp) {
+            throw (new TokenNotActiveException('Token not active'))->setJwt($jwt);
+        }
+
+        return $jwt;
+    }
+
+    /**
+     * 单纯的解析一个jwt.
+     * @throws Exceptions\InvalidTokenException
+     * @throws Exceptions\SignatureException
+     * @throws Exceptions\TokenExpiredException
+     */
+    public function justParse(string $token): JWT
+    {
         $encoder = $this->getEncoder();
         $encrypter = $this->getEncrypter();
         $arr = explode('.', $token);
@@ -181,23 +208,7 @@ class JWTManager
         }
 
         if ($encrypter->check($signatureString, $encoder->decode($arr[2]))) {
-            $jwt = new JWT($this, $headers, $payload);
-            $timestamp = time();
-            $payload = $jwt->getPayload();
-
-            if ($this->hasBlacklist($jwt)) {
-                throw (new TokenBlacklistException('The token is already on the blacklist'))->setJwt($jwt);
-            }
-
-            if (isset($payload['exp']) && $payload['exp'] <= $timestamp) {
-                throw (new TokenExpiredException('Token expired'))->setJwt($jwt);
-            }
-
-            if (isset($payload['nbf']) && $payload['nbf'] > $timestamp) {
-                throw (new TokenNotActiveException('Token not active'))->setJwt($jwt);
-            }
-
-            return $jwt;
+            return new JWT($this, $headers, $payload);
         }
 
         throw new SignatureException('Invalid signature');
@@ -256,9 +267,9 @@ class JWTManager
      */
     protected function blacklistKey($jwt)
     {
-        $jti = $jwt instanceof JWT ? ($jwt->getPayload()['jti'] ?? $jwt->token()) : $jwt;
+        $jti = $jwt instanceof JWT ? ($jwt->getPayload()['jti'] ?? md5($jwt->token())) : md5($jwt);
 
-        return "jwt.blacklist.prefix:{$this->prefix}.{$jti}";
+        return "jwt:blacklist:{$this->prefix}:{$jti}";
     }
 
     protected function verifyConfig(array $config)

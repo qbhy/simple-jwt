@@ -104,7 +104,7 @@ class JwtTest extends TestCase
         $manager->addBlacklist($jwt);
         $manager->removeBlacklist($jwt);
 
-        return $manager->parse($token) instanceof JWT;
+        return $manager->parse($token) instanceof JWT && $manager->justParse($token) instanceof JWT;
     }
 
     protected function manager($driver = null, $encoder = null)

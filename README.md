@@ -1,12 +1,15 @@
 # simple-jwt
+
 超简单的 jwt 实现。支持 Laravel、Hyperf 以及支持 composer 的其他框架
 
 ## 如何安装 ？
+
 ```bash
 composer require 96qbhy/simple-jwt
 ```
 
 ## 如何使用 ？
+
 ```php
 require 'vendor/autoload.php';
 
@@ -52,6 +55,9 @@ print_r($token);
 try {
 // 通过 token 得到 jwt 对象
     $jwt1 = $jwtManager->parse($token);
+    
+    // 单纯解析，只判断签名是否正确，不判断时效性和黑名单 
+//    $jwt1 = $jwtManager->justParse($token);
 } catch (Exceptions\TokenExpiredException $tokenExpiredException) {
     // 如果已经过期了，也可以尝试刷新此 jwt ,第二个参数如果为 true 将忽略 refresh ttl 检查
     $jwt1 = $jwtManager->refresh($tokenExpiredException->getJwt(), true);
