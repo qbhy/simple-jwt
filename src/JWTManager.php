@@ -281,6 +281,10 @@ class JWTManager
 
     protected function resolveEncrypter($encrypter)
     {
+        if ($encrypter instanceof Encrypter) {
+            $this->encrypter = $encrypter;
+            return;
+        }
         if (class_exists($encrypter)) {
             $this->encrypter = new $encrypter($this->secret);
             return;

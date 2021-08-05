@@ -13,6 +13,7 @@ namespace Qbhy\SimpleJwt\Tests\Unit;
 
 use Qbhy\SimpleJwt\Encoders\Base64UrlSafeEncoder;
 use Qbhy\SimpleJwt\EncryptAdapters\CryptEncrypter;
+use Qbhy\SimpleJwt\EncryptAdapters\HS256Encrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\Md5Encrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\PasswordHashEncrypter;
 use Qbhy\SimpleJwt\EncryptAdapters\SHA1Encrypter;
@@ -47,6 +48,28 @@ class JwtTest extends TestCase
         $secret = 'qbhy/simple-jwt';
         $this->assertTrue($this->check($this->manager(Md5Encrypter::class)));
         $this->assertTrue($this->check($this->manager(Md5Encrypter::class, new Base64UrlSafeEncoder())));
+    }
+
+    /**
+     * 测试默认 md5 加密器.
+     */
+    public function testHS256JwtManager()
+    {
+        $jwtManager = new JWTManager([
+            'secret' => 'secret',
+            'default' => new HS256Encrypter('qwewe1232323dfsdfhadlibfjfh90'),
+            'encode' => new Base64UrlSafeEncoder(),
+            'cache' => function (JWTManager $JWTManager) {
+                return new \Doctrine\Common\Cache\FilesystemCache(sys_get_temp_dir());
+            },
+        ]);
+        // 群友提供
+        $token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBpZCI6MSwiY29tcGFueUlkIjp7IkludDY0IjoxLCJWYWxpZCI6dHJ1ZX0sImV4cCI6MTYyOTg4NDg5NywiaWF0IjoxNjI3MjkyODk3LCJzdGFmZk5hbWUiOnsiU3RyaW5nIjoi5bCP5piOIiwiVmFsaWQiOnRydWV9LCJzdGFmZmlkIjp7IkludDY0IjoxLCJWYWxpZCI6dHJ1ZX0sInVzZXJJZCI6MSwidXNlck5hbWUiOiJ1c2VyMDEifQ.Pz8kWBdtDMOcJs9HXmzvlPgY53aZVyg50vBRELG7G9M';
+        $jwt = $jwtManager->parse($token);
+        $this->assertTrue($jwt instanceof JWT);
+
+        $this->assertTrue($this->check($this->manager(HS256Encrypter::class)));
+        $this->assertTrue($this->check($this->manager(HS256Encrypter::class, new Base64UrlSafeEncoder())));
     }
 
     /**
