@@ -46,6 +46,7 @@ return [
         Encrypter\CryptEncrypter::alg() => Encrypter\CryptEncrypter::class,
         Encrypter\SHA1Encrypter::alg() => Encrypter\SHA1Encrypter::class,
         Encrypter\Md5Encrypter::alg() => Encrypter\Md5Encrypter::class,
+        Encrypter\HS256Encrypter::alg() => Encrypter\HS256Encrypter::class,
     ],
 
     /*
