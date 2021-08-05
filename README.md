@@ -45,7 +45,7 @@ $jwtManager->setTtl(60);
 // 设置 token 过期后多久时间内允许刷新，单位 分钟
 $jwtManager->setRefreshTtl(120);
 
-// 通过 jwt manager 示例化 jwt ，标准 jwt
+// 通过 jwt manager 实例化 jwt ，标准 jwt
 $jwt0 = $jwtManager->make($payload, $headers);
 
 // 生成 token，当然你也可以使用链式调用，例如:  $jwtManager->make($payload, $headers)->token()
