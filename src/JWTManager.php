@@ -70,8 +70,8 @@ class JWTManager
 
         $this->encoder = $config['encoder'] ?? new Base64UrlSafeEncoder();
         $this->cache = $config['cache'] ?? new FilesystemCache(sys_get_temp_dir());
-        $this->ttl = $config['ttl'] ?? 60;
-        $this->refreshTtl = $config['refresh_ttl'] ?? 60 * 24 * 7; // 单位秒，默认一周内可以刷新
+        $this->ttl = $config['ttl'] ?? 60 * 60;
+        $this->refreshTtl = $config['refresh_ttl'] ?? 60 * 60 * 24 * 7; // 单位秒，默认一周内可以刷新
     }
 
     public function getTtl(): int
@@ -149,7 +149,7 @@ class JWTManager
         return [
             'sub' => '1',
             'iss' => 'http://' . ($_SERVER['SERVER_NAME'] ?? '') . ':' . ($_SERVER['SERVER_PORT'] ?? '') . ($_SERVER['REQUEST_URI'] ?? ''),
-            'exp' => $timestamp + $this->getTtl() * 60,
+            'exp' => $timestamp + $this->getTtl(),
             'iat' => $timestamp,
             'nbf' => $timestamp,
         ];
@@ -220,7 +220,7 @@ class JWTManager
         $this->getCache()->save(
             $this->blacklistKey($jwt),
             $now,
-            ($jwt instanceof JWT ? ($jwt->getPayload()['iat'] || $now) : $now) + $this->getRefreshTtl() * 60 // 存到该 token 超过 refresh 即可
+            ($jwt instanceof JWT ? ($jwt->getPayload()['iat'] || $now) : $now) + $this->getRefreshTtl() // 存到该 token 超过 refresh 即可
         );
     }
 
@@ -243,7 +243,7 @@ class JWTManager
         $payload = $jwt->getPayload();
 
         if (! $force && isset($payload['iat'])) {
-            $refreshExp = $payload['iat'] + $this->getRefreshTtl() * 60;
+            $refreshExp = $payload['iat'] + $this->getRefreshTtl();
 
             if ($refreshExp <= time()) {
                 throw (new TokenRefreshExpiredException('token expired, refresh is not supported'))->setJwt($jwt);

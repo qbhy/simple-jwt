@@ -65,7 +65,7 @@ class JwtTest extends TestCase
         ]);
         // 群友提供
         $token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBpZCI6MSwiY29tcGFueUlkIjp7IkludDY0IjoxLCJWYWxpZCI6dHJ1ZX0sImV4cCI6MTYyOTg4NDg5NywiaWF0IjoxNjI3MjkyODk3LCJzdGFmZk5hbWUiOnsiU3RyaW5nIjoi5bCP5piOIiwiVmFsaWQiOnRydWV9LCJzdGFmZmlkIjp7IkludDY0IjoxLCJWYWxpZCI6dHJ1ZX0sInVzZXJJZCI6MSwidXNlck5hbWUiOiJ1c2VyMDEifQ.Pz8kWBdtDMOcJs9HXmzvlPgY53aZVyg50vBRELG7G9M';
-        $jwt = $jwtManager->parse($token);
+        $jwt = $jwtManager->justParse($token);
         $this->assertTrue($jwt instanceof JWT);
 
         $this->assertTrue($this->check($this->manager(HS256Encrypter::class)));
