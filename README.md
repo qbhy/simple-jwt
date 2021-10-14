@@ -40,9 +40,9 @@ return new \Doctrine\Common\Cache\FilesystemCache(sys_get_temp_dir());
 // 实例化 jwt manager
 $jwtManager = new JWTManager(compact('secret', 'encode','cache'));
 
-// 设置 token 有效时间，单位 分钟
+// 设置 token 有效时间，单位 秒
 $jwtManager->setTtl(60);
-// 设置 token 过期后多久时间内允许刷新，单位 分钟
+// 设置 token 过期后多久时间内允许刷新，单位 秒
 $jwtManager->setRefreshTtl(120);
 
 // 通过 jwt manager 实例化 jwt ，标准 jwt
