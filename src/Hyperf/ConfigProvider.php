@@ -13,7 +13,7 @@ namespace Qbhy\SimpleJwt\Hyperf;
 
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Contract\ContainerInterface;
-use Hyperf\Utils\ApplicationContext;
+use Hyperf\Context\ApplicationContext;
 use Qbhy\SimpleJwt\JWTManager;
 
 class ConfigProvider
