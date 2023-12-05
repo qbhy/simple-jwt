@@ -13,7 +13,7 @@ namespace Qbhy\SimpleJwt\Hyperf;
 
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\Contract\ContainerInterface;
-use Hyperf\Utils\ApplicationContext;
+use Hyperf\Context\ApplicationContext;
 use Qbhy\SimpleJwt\JWTManager;
 
 class ConfigProvider
@@ -25,7 +25,7 @@ class ConfigProvider
             $container = ApplicationContext::getContainer();
             $container->define(JWTManager::class, function () use ($container) {
                 return new JWTManager(
-                    $container->get(ConfigInterface::class)->get('simple-jwt', ['secret' => env('SIMPLE_JWT_SECRET')])
+                    $container->get(ConfigInterface::class)->get('simple-jwt', ['secret' => \Hyperf\Support\env('SIMPLE_JWT_SECRET')])
                 );
             });
         }
